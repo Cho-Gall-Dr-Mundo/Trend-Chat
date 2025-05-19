@@ -1,0 +1,15 @@
+server:
+  port: 0
+  tomcat:
+    mbeanregistry:
+      enabled: true
+
+spring:
+  application:
+    name: payment-service
+  cloud:
+    config:
+      name: trend-chat-dev, payment-service-dev
+  config:
+    import:
+      - optional:configserver:${CONFIG_SERVER_URI}

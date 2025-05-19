@@ -1,0 +1,15 @@
+server:
+  port: 8080
+  tomcat:
+    mbeanregistry:
+      enabled: true
+
+spring:
+  application:
+    name: api-gateway-service
+  cloud:
+    config:
+      name: trend-chat-dev, api-gateway-service-dev
+  config:
+    import:
+      - optional:configserver:${CONFIG_SERVER_URI}

@@ -1,0 +1,15 @@
+server:
+  port: 0
+  tomcat:
+    mbeanregistry:
+      enabled: true
+
+spring:
+  application:
+    name: trend-service
+  cloud:
+    config:
+      name: trend-chat-dev, trend-service-dev
+  config:
+    import:
+      - optional:configserver:${CONFIG_SERVER_URI}
