@@ -69,4 +69,8 @@ public class User {
     public static User ofSignup(UserRequest.Signup userRequest, String encodedPassword) {
         return new User(userRequest, encodedPassword);
     }
+
+    public void accountLock() {
+        isAccountNonLocked = false;
+    }
 }

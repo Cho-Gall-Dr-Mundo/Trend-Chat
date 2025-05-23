@@ -43,7 +43,7 @@ public class SecurityConfig {
         authenticationFilter.setAuthenticationManager(
                 authenticationManager(authenticationConfiguration)
         );
-        authenticationFilter.setFilterProcessesUrl("/auth/login");
+        authenticationFilter.setFilterProcessesUrl("/api/v1/auth/login");
         return authenticationFilter;
     }
 
