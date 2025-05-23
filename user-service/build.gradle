@@ -35,7 +35,7 @@ ext {
 }
 
 dependencies {
-    implementation 'io.github.Cho-Gall-Dr-Mundo:trend-chat-common:1.0.0'
+    implementation 'io.github.Cho-Gall-Dr-Mundo:trend-chat-common:1.0.2'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
