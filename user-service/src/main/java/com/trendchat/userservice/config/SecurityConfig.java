@@ -1,6 +1,7 @@
 package com.trendchat.userservice.config;
 
 import com.trendchat.trendchatcommon.util.JwtUtil;
+import com.trendchat.userservice.security.AuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -34,8 +36,21 @@ public class SecurityConfig {
     }
 
     @Bean
+    public AuthenticationFilter authenticationFilter(
+            AuthenticationConfiguration authenticationConfiguration
+    ) throws Exception {
+        AuthenticationFilter authenticationFilter = new AuthenticationFilter(jwtUtil);
+        authenticationFilter.setAuthenticationManager(
+                authenticationManager(authenticationConfiguration)
+        );
+        authenticationFilter.setFilterProcessesUrl("/auth/login");
+        return authenticationFilter;
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(
-            HttpSecurity httpSecurity
+            HttpSecurity httpSecurity,
+            AuthenticationFilter authenticationFilter
     ) throws Exception {
         return httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
@@ -48,6 +63,7 @@ public class SecurityConfig {
                                 .requestMatchers("/auth/**").permitAll()
                                 .requestMatchers("/actuator/**").permitAll()
                 )
+                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .build();
