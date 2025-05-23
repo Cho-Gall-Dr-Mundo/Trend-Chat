@@ -1,10 +1,13 @@
 package com.trendchat.userservice.controller;
 
 import com.trendchat.trendchatcommon.util.JwtUtil;
+import com.trendchat.userservice.dto.Token;
 import com.trendchat.userservice.dto.UserRequest;
 import com.trendchat.userservice.dto.UserResponse;
 import com.trendchat.userservice.service.AuthService;
 import com.trendchat.userservice.service.TokenService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,5 +30,20 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.createUser(userRequest));
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<Token.Pair> refreshToken(
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        String accessToken = jwtUtil.getAccessTokenFromHeader(request);
+        String refreshToken = jwtUtil.resolveTokenFromCookie(request);
 
+        Token.Pair oldTokens = new Token.Pair(accessToken, refreshToken);
+        Token.Pair newTokens = tokenService.refreshTokens(oldTokens);
+
+        jwtUtil.addAccessTokenToHeader(response, newTokens.accessToken());
+        jwtUtil.addRefreshTokenToCookie(response, newTokens.refreshToken());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(newTokens);
+    }
 }
