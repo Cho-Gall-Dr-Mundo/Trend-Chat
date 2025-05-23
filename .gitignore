@@ -43,3 +43,4 @@ src/main/.DS_Store
 
 ### ENV ###
 application.properties
+gradle.properties
