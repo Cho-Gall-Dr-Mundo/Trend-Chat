@@ -1,5 +1,6 @@
 package com.trendchat.userservice.service;
 
+import com.trendchat.userservice.dto.UserResponse;
 import com.trendchat.userservice.entity.User;
 import com.trendchat.userservice.repository.UserRepository;
 import com.trendchat.userservice.security.PrincipalDetails;
@@ -38,6 +39,11 @@ public class UserServiceImpl implements UserService {
     public void lockAccount(String userId) {
         User user = isValidUser(userId);
         user.accountLock();
+    }
+
+    @Override
+    public UserResponse.Get getUser(String userId) {
+        return new UserResponse.Get(isValidUser(userId));
     }
 
     private User isValidEmail(String email) {

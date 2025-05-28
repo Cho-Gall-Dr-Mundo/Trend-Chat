@@ -1,5 +1,6 @@
 package com.trendchat.userservice.config;
 
+import com.trendchat.trendchatcommon.filter.AuthorizationFilter;
 import com.trendchat.trendchatcommon.util.JwtUtil;
 import com.trendchat.userservice.security.AuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,11 @@ public class SecurityConfig {
     }
 
     @Bean
+    public AuthorizationFilter authorizationFilter() {
+        return new AuthorizationFilter(jwtUtil);
+    }
+
+    @Bean
     public AuthenticationFilter authenticationFilter(
             AuthenticationConfiguration authenticationConfiguration
     ) throws Exception {
@@ -50,7 +56,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(
             HttpSecurity httpSecurity,
-            AuthenticationFilter authenticationFilter
+            AuthenticationFilter authenticationFilter,
+            AuthorizationFilter authorizationFilter
     ) throws Exception {
         return httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
@@ -60,9 +67,11 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(
                         authorize -> authorize
-                                .requestMatchers("/auth/**").permitAll()
+                                .requestMatchers("/api/v1/auth/**").permitAll()
                                 .requestMatchers("/actuator/**").permitAll()
+                                .requestMatchers("/api/v1/users/**").authenticated()
                 )
+                .addFilterBefore(authorizationFilter, AuthenticationFilter.class)
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
