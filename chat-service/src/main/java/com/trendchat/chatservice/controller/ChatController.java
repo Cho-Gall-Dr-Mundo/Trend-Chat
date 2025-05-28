@@ -1,7 +1,7 @@
 package com.trendchat.chatservice.controller;
 
+import com.trendchat.chatservice.dto.ChatMessageRequest;
 import com.trendchat.chatservice.entity.ChatMessage;
-import com.trendchat.chatservice.service.ChatMessagePublisher;
 import com.trendchat.chatservice.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -15,14 +15,13 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/chat")
 public class ChatController {
-    private final ChatMessagePublisher publisher;
     private final ChatService chatService;
     private final Sinks.Many<ChatMessage> sink;
 
     // 클라이언트 → 서버로 메시지 전송 (MQ 발행)
     @PostMapping("/send")
-    public void send(@RequestBody ChatMessage message) {
-        publisher.send(message);
+    public void send(@RequestBody ChatMessageRequest messageRequest) {
+        chatService.handleMessage(messageRequest);
     }
 
     // 클라이언트가 실시간 채팅 메시지를 수신 (SSE)
@@ -33,7 +32,7 @@ public class ChatController {
 
     // 과거 메시지 조회 API (roomId 기준)
     @GetMapping("/history/{roomId}")
-    public List<ChatMessage> getMessageHistory(@PathVariable String roomId) {
+    public List<ChatMessage> getMessageHistory(@PathVariable Long roomId) {
         return chatService.getMessageHistory(roomId);
     }
 }
