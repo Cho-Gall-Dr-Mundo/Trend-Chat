@@ -19,7 +19,6 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
-
     @Override
     @Transactional
     public UserResponse.Get createUser(Signup userRequest) {
@@ -33,3 +32,4 @@ public class AuthServiceImpl implements AuthService {
         return new UserResponse.Get(savedUser);
     }
 }
+
