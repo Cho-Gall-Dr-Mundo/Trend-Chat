@@ -1,14 +1,14 @@
 package com.trendchat.chatservice.controller;
 
-import com.trendchat.chatservice.dto.ChatRoomRequest;
 import com.trendchat.chatservice.entity.ChatRoom;
 import com.trendchat.chatservice.service.ChatRoomService;
-import com.trendchat.chatservice.service.ChatService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,12 +16,6 @@ import java.util.List;
 public class ChatRoomController {
 
     private final ChatRoomService chatRoomService;
-
-    @PostMapping
-    public ResponseEntity<ChatRoom> createChatRoom(@RequestBody ChatRoomRequest request) {
-        ChatRoom chatRoom = chatRoomService.createChatRoom(request.title(), request.description());
-        return ResponseEntity.ok(chatRoom);
-    }
 
     @GetMapping
     public List<ChatRoom> getAllChatRooms() {
