@@ -59,6 +59,7 @@ dependencies {
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
     implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 }
 
 dependencyManagement {
