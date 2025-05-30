@@ -35,7 +35,6 @@ public class RssTrendService {
                 String newsTitle = null;
                 String newsUrl = null;
                 String newsImage = null;
-                String newsSource = null;
 
                 boolean inItem = false;
                 boolean inNewsItem = false;
@@ -52,7 +51,7 @@ public class RssTrendService {
                         }
                         case "ht:news_item" -> {
                             inNewsItem = true;
-                            newsTitle = newsUrl = newsImage = newsSource = null;
+                            newsTitle = newsUrl = newsImage = null;
                         }
                     }
                 }
@@ -71,10 +70,9 @@ public class RssTrendService {
                         case "ht:news_item_title" -> newsTitle = buffer.toString();
                         case "ht:news_item_url" -> newsUrl = buffer.toString();
                         case "ht:news_item_picture" -> newsImage = buffer.toString();
-                        case "ht:news_item_source" -> newsSource = buffer.toString();
                         case "ht:news_item" -> {
                             if (newsTitle != null && newsUrl != null) {
-                                newsItems.add(new NewsItem(newsTitle, newsUrl));
+                                newsItems.add(new NewsItem(newsTitle, newsUrl, newsImage));
                             }
                             inNewsItem = false;
                         }
