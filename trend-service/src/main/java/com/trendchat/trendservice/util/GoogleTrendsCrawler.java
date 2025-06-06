@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
  * Google Trends 웹사이트에서 실시간 트렌드 키워드 정보를 크롤링하는 유틸리티 컴포넌트입니다.
  * <p>
  * Shadow DOM 기반의 동적 웹 페이지를 Selenium WebDriver와 JavaScript 실행을 통해 분석하며, 키워드, 추정 검색량, 상태, 시간 등의 정보를
- * {@link TrendItem} 형태로 반환합니다.
+ * {@link com.trendchat.trendservice.dto.TrendItem} 형태로 반환합니다.
  * </p>
  *
  * <ul>
@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
  *     <li>수집된 데이터는 {@code Map<String, TrendItem>} 형태로 반환됨</li>
  * </ul>
  *
- * @see TrendItem
+ * @see com.trendchat.trendservice.dto.TrendItem
  */
 @Slf4j
 @Component
