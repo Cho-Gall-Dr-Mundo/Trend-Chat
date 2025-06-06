@@ -6,7 +6,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -16,18 +18,24 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
 
     @Override
+    @Transactional
     public boolean createChatRoom(String title, String description) {
         if (isExistsTitle(title)) {
             return false;
         }
 
-        chatRoomRepository.save(ChatRoom.builder()
-                .title(title)
-                .description(description)
-                .createdAt(LocalDateTime.now())
-                .build());
+        try {
+            chatRoomRepository.save(ChatRoom.builder()
+                    .title(title)
+                    .description(description)
+                    .createdAt(LocalDateTime.now())
+                    .build());
 
-        return true;
+            return true;
+        } catch (DataIntegrityViolationException e) {
+            // Unique 제약 위반 시
+            return false;
+        }
     }
 
     @Override
