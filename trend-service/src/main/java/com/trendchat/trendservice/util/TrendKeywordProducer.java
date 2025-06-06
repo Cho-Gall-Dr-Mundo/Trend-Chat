@@ -4,6 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+/**
+ * 트렌드 키워드를 Kafka 토픽("trend-keywords")으로 전송하는 프로듀서 컴포넌트입니다.
+ * <p>
+ * 주어진 키워드 및 관련 데이터를 직렬화하여 Kafka로 전송하며, 키는 파티셔닝 또는 메시지 구분 기준으로 활용됩니다.
+ * </p>
+ *
+ * @see org.springframework.kafka.core.KafkaTemplate
+ */
 @Component
 @RequiredArgsConstructor
 public class TrendKeywordProducer {

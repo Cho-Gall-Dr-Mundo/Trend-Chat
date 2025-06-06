@@ -13,16 +13,17 @@ import org.springframework.stereotype.Component;
 /**
  * Google Trends 데이터를 주기적으로 수집하여 DB에 저장하고 Kafka로 전송하는 Quartz Job 클래스입니다.
  * <p>
- * 이 클래스는 Quartz 스케줄러에 의해 1분 주기로 실행되며, 내부적으로 {@link GoogleTrendsCrawler}를 이용해 트렌드 키워드를 크롤링한 후:
+ * 이 클래스는 Quartz 스케줄러에 의해 1분 주기로 실행되며, 내부적으로
+ * {@link com.trendchat.trendservice.util.GoogleTrendsCrawler}를 이용해 트렌드 키워드를 크롤링한 후:
  * </p>
  * <ul>
- *     <li>{@link TrendKeywordService}를 통해 키워드를 DB에 저장하고</li>
- *     <li>{@link TrendKeywordProducer}를 통해 Kafka 토픽("trend-keywords")으로 전송합니다.</li>
+ *     <li>{@link com.trendchat.trendservice.service.TrendKeywordService}를 통해 키워드를 DB에 저장하고</li>
+ *     <li>{@link com.trendchat.trendservice.util.TrendKeywordProducer}를 통해 Kafka 토픽("trend-keywords")으로 전송합니다.</li>
  * </ul>
  *
- * @see GoogleTrendsCrawler
- * @see TrendKeywordService
- * @see TrendKeywordProducer
+ * @see com.trendchat.trendservice.util.GoogleTrendsCrawler
+ * @see com.trendchat.trendservice.service.TrendKeywordService
+ * @see com.trendchat.trendservice.util.TrendKeywordProducer
  * @see com.trendchat.trendservice.config.QuartzConfig
  */
 @Component
