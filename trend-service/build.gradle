@@ -60,6 +60,8 @@ dependencies {
     implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.seleniumhq.selenium:selenium-java:4.21.0'
+    implementation 'io.github.bonigarcia:webdrivermanager:6.1.0'
 }
 
 dependencyManagement {

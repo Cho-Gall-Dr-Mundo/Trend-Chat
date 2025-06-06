@@ -16,11 +16,7 @@ public class TrendKeywordConsumer {
 
     private final ChatRoomService chatRoomService;
 
-    @KafkaListener(
-            topics = "trend-keywords",
-            groupId = "chat-service",
-            containerFactory = "kafkaListenerContainerFactory"
-    )
+    @KafkaListener(topics = "trend-keywords", groupId = "chat-service")
     public void consume(
             @Header(KafkaHeaders.RECEIVED_KEY) String key,
             @Payload(required = false) TrendItem value
