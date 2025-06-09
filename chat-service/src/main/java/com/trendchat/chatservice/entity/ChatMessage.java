@@ -1,5 +1,6 @@
 package com.trendchat.chatservice.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,7 @@ public class ChatMessage{
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
+    @JsonIgnore // ✅ 역참조 차단
     private ChatRoom chatRoom;
 
 }

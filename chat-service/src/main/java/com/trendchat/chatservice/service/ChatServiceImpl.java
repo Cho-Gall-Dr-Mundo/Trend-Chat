@@ -1,6 +1,7 @@
 package com.trendchat.chatservice.service;
 
 import com.trendchat.chatservice.dto.ChatMessageRequest;
+import com.trendchat.chatservice.dto.ChatMessageResponse;
 import com.trendchat.chatservice.entity.ChatMessage;
 import com.trendchat.chatservice.entity.ChatRoom;
 import com.trendchat.chatservice.repository.ChatMessageRepository;
@@ -27,8 +28,16 @@ public class ChatServiceImpl implements ChatService{
     }
 
     @Override
-    public List<ChatMessage> getMessageHistory(Long roomId){
-        return repository.findByChatRoomIdOrderByTimestampAsc(roomId);
+    public List<ChatMessageResponse> getMessageHistory(Long roomId, String currentUserEmail) {
+        return repository.findByChatRoomIdOrderByTimestampAsc(roomId).stream()
+                .map(msg -> new ChatMessageResponse(
+                        msg.getId(),
+                        msg.getSender(),
+                        msg.getContent(),
+                        msg.getTimestamp(),
+                        msg.getSender().equals(currentUserEmail)
+                ))
+                .toList();
     }
 
     @Override

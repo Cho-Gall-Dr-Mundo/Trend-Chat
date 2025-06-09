@@ -1,10 +1,13 @@
 package com.trendchat.chatservice.controller;
 
 import com.trendchat.chatservice.dto.ChatMessageRequest;
+import com.trendchat.chatservice.dto.ChatMessageResponse;
 import com.trendchat.chatservice.entity.ChatMessage;
 import com.trendchat.chatservice.service.ChatService;
+import com.trendchat.trendchatcommon.auth.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
@@ -32,7 +35,7 @@ public class ChatController {
 
     // 과거 메시지 조회 API (roomId 기준)
     @GetMapping("/history/{roomId}")
-    public List<ChatMessage> getMessageHistory(@PathVariable Long roomId) {
-        return chatService.getMessageHistory(roomId);
+    public List<ChatMessageResponse> getMessageHistory(@PathVariable Long roomId, @AuthenticationPrincipal AuthUser authUser) {
+        return chatService.getMessageHistory(roomId, authUser.getUserId());
     }
 }
