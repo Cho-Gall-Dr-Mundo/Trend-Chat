@@ -35,8 +35,8 @@ ext {
 }
 
 dependencies {
-    implementation 'io.github.Cho-Gall-Dr-Mundo:trend-chat-common:1.0.0'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'io.github.Cho-Gall-Dr-Mundo:trend-chat-common:1.1.1'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
@@ -58,6 +58,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux' // WebFlux 사용
     implementation 'com.fasterxml.jackson.core:jackson-databind' // 메시지 직렬화
     implementation 'org.springframework.kafka:spring-kafka'
+    implementation("jakarta.servlet:jakarta.servlet-api:6.0.0")
 }
 
 dependencyManagement {
