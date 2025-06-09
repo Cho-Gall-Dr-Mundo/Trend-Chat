@@ -52,4 +52,14 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     private boolean isExistsTitle(String title) {
         return chatRoomRepository.existsByTitle(title);
     }
+
+    @Override
+    public ChatRoom getOrCreateByTitle(String title) {
+        return chatRoomRepository.findByTitle(title)
+                .orElseGet(() -> chatRoomRepository.save(ChatRoom.builder()
+                        .title(title)
+                        .description(title + "에 대한 자동 생성된 채팅방")
+                        .createdAt(LocalDateTime.now())
+                        .build()));
+    }
 }

@@ -27,4 +27,11 @@ public class ChatRoomController {
         ChatRoom chatRoom = chatRoomService.getChatRoomById(roomId);
         return ResponseEntity.ok(chatRoom);
     }
+
+    // 프론트에서 title만 넣으면 자동 조회/생성
+    @GetMapping("/title/{title}")
+    public ResponseEntity<ChatRoom> getOrCreateByTitle(@PathVariable String title) {
+        ChatRoom chatRoom = chatRoomService.getOrCreateByTitle(title);
+        return ResponseEntity.ok(chatRoom);
+    }
 }

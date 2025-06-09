@@ -10,4 +10,5 @@ public interface ChatRoomService {
     List<ChatRoom> getAllChatRooms();
 
     ChatRoom getChatRoomById(Long roomId);
+    ChatRoom getOrCreateByTitle(String title);
 }

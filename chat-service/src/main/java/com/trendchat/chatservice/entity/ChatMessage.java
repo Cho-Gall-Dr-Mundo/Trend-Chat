@@ -3,6 +3,7 @@ package com.trendchat.chatservice.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class ChatMessage {
+public class ChatMessage{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
