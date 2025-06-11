@@ -1,10 +1,12 @@
 package com.trendchat.chatservice.dto;
 
-import java.time.LocalDateTime;
+import lombok.Builder;
 
+import java.time.LocalDateTime;
+@Builder
 public record ChatMessageResponse(
     Long id,
-    String sender,
+    String senderNickname,
     String content,
     LocalDateTime timestamp,
     boolean isMine

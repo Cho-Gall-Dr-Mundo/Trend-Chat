@@ -1,5 +1,6 @@
 package com.trendchat.chatservice.service;
 
+import com.trendchat.chatservice.dto.ChatMessageDto;
 import com.trendchat.chatservice.dto.ChatMessageRequest;
 import com.trendchat.chatservice.dto.ChatMessageResponse;
 import com.trendchat.chatservice.entity.ChatMessage;
@@ -10,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -43,14 +43,15 @@ public class ChatServiceImpl implements ChatService{
     @Override
     public void handleMessage(ChatMessageRequest messageRequest) {
         // 1. 채팅방 ID로 ChatRoom 엔티티 찾기
-        ChatRoom chatRoom = chatRoomRepository.findById(Long.valueOf(messageRequest.roomId())).orElseThrow(()-> new IllegalArgumentException("Room not found"));
+        ChatRoom chatRoom = chatRoomRepository.findById(messageRequest.roomId()).orElseThrow(()-> new IllegalArgumentException("Room not found"));
 
         // 2. ChatMessage 생성 & 채팅방 연관 설정
-        ChatMessage message = ChatMessage.builder()
-                .chatRoom(chatRoom)
-                .sender(messageRequest.sender())
-                .content(messageRequest.content())
-                .build();
-        publisher.send(message);
+        ChatMessageDto messageDto = new ChatMessageDto(
+                chatRoom.getId(),
+                messageRequest.sender(),
+                messageRequest.senderNickName(),
+                messageRequest.content()
+        );
+        publisher.send(messageDto);
     }
 }
