@@ -20,7 +20,7 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseEntity<UserResponse.Get> signup(@AuthenticationPrincipal AuthUser authUser) {
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(userService.getUser(authUser.getUserId()));
     }
 }

@@ -1,7 +1,7 @@
 package com.trendchat.trendservice.job;
 
 import com.trendchat.trendservice.dto.TrendItem;
-import com.trendchat.trendservice.service.TrendKeywordService;
+import com.trendchat.trendservice.service.TrendKeywordServiceImpl;
 import com.trendchat.trendservice.util.GoogleTrendsCrawler;
 import com.trendchat.trendservice.util.TrendKeywordProducer;
 import java.util.Map;
@@ -17,12 +17,12 @@ import org.springframework.stereotype.Component;
  * {@link com.trendchat.trendservice.util.GoogleTrendsCrawler}를 이용해 트렌드 키워드를 크롤링한 후:
  * </p>
  * <ul>
- *     <li>{@link com.trendchat.trendservice.service.TrendKeywordService}를 통해 키워드를 DB에 저장하고</li>
+ *     <li>{@link TrendKeywordServiceImpl}를 통해 키워드를 DB에 저장하고</li>
  *     <li>{@link com.trendchat.trendservice.util.TrendKeywordProducer}를 통해 Kafka 토픽("trend-keywords")으로 전송합니다.</li>
  * </ul>
  *
  * @see com.trendchat.trendservice.util.GoogleTrendsCrawler
- * @see com.trendchat.trendservice.service.TrendKeywordService
+ * @see TrendKeywordServiceImpl
  * @see com.trendchat.trendservice.util.TrendKeywordProducer
  * @see com.trendchat.trendservice.config.QuartzConfig
  */
@@ -31,13 +31,13 @@ import org.springframework.stereotype.Component;
 public class GoogleTrendsCrawlJob implements Job {
 
     private final TrendKeywordProducer trendKeywordProducer;
-    private final TrendKeywordService trendKeywordService;
+    private final TrendKeywordServiceImpl trendKeywordService;
     private final GoogleTrendsCrawler googleTrendsCrawler;
 
     /**
      * Quartz 스케줄러에 의해 주기적으로 실행되는 작업으로, Google Trends에서 트렌드 키워드를 수집하여 DB에 저장하고 Kafka로도 전송합니다.
      * <p>
-     * 1. {@link GoogleTrendsCrawler}로 크롤링된 키워드를<br> 2. {@link TrendKeywordService}를 통해 DB에
+     * 1. {@link GoogleTrendsCrawler}로 크롤링된 키워드를<br> 2. {@link TrendKeywordServiceImpl}를 통해 DB에
      * 저장하고,<br> 3. {@link TrendKeywordProducer}를 통해 Kafka로 전송합니다.
      * </p>
      *
