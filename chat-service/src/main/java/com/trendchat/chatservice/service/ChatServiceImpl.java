@@ -32,6 +32,7 @@ public class ChatServiceImpl implements ChatService{
         return repository.findByChatRoomIdOrderByTimestampAsc(roomId).stream()
                 .map(msg -> new ChatMessageResponse(
                         msg.getId(),
+                        msg.getChatRoom().getId(),
                         msg.getSender(),
                         msg.getContent(),
                         msg.getTimestamp(),

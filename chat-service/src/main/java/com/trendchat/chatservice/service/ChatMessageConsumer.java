@@ -41,6 +41,7 @@ public class ChatMessageConsumer {
         // 3. SSE응답용 DTO생성
         ChatMessageResponse response = new ChatMessageResponse(
                 message.getId(),
+                dto.roomId(),
                 dto.senderNickname(),
                 message.getContent(),
                 message.getTimestamp(),
