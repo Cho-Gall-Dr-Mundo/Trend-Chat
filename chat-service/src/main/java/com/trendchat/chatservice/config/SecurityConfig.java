@@ -34,7 +34,7 @@ public class SecurityConfig {
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange(exchanges -> exchanges
-//                        .pathMatchers("/api/v1/chat/**").permitAll()
+                        .pathMatchers("/api/v1/chat/stream").permitAll()
                                 .anyExchange().authenticated()
                 )
                 .addFilterAt(authorizationFilter, SecurityWebFiltersOrder.AUTHORIZATION)

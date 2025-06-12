@@ -77,6 +77,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         List<ChatMessageResponse> messages = chatRoom.getMessages().stream()
                 .map(msg -> new ChatMessageResponse(
                         msg.getId(),
+                        msg.getChatRoom().getId(),
                         msg.getSender(),
                         msg.getContent(),
                         msg.getTimestamp(),
