@@ -1,5 +1,7 @@
 package com.trendchat.trendservice.service;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -22,6 +24,8 @@ public interface TrendKeywordService {
      * @param approxTraffic 해당 키워드의 추정 검색량 (예: 10000)
      */
     void createTrendKeyword(String keyword, int approxTraffic);
+
+    List<Map<String, Object>> getTop10Keywords();
 
     /**
      * Redis에 저장된 최근 데이터와 과거 데이터를 비교하여 급상승한 키워드를 감지합니다.

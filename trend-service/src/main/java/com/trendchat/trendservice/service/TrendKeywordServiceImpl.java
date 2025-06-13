@@ -3,6 +3,7 @@ package com.trendchat.trendservice.service;
 import com.trendchat.trendservice.entity.TrendKeyword;
 import com.trendchat.trendservice.repository.TrendKeywordRepository;
 import com.trendchat.trendservice.util.HotKeywordDetector;
+import com.trendchat.trendservice.util.KeywordUtil;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -10,10 +11,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,11 +47,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class TrendKeywordServiceImpl {
+public class TrendKeywordServiceImpl implements TrendKeywordService {
 
     private final TrendKeywordRepository trendKeywordRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final HotKeywordDetector hotKeywordDetector;
+    private final KeywordUtil keywordUtil;
 
     /**
      * 전달받은 키워드 정보로 트렌드 키워드 엔티티를 생성하고 DB 및 Redis에 저장합니다.
@@ -60,6 +64,7 @@ public class TrendKeywordServiceImpl {
      * @param keyword       수집된 트렌드 키워드 문자열
      * @param approxTraffic 해당 키워드의 추정 검색량 (예: 10000)
      */
+    @Override
     @Transactional
     public void createTrendKeyword(String keyword, int approxTraffic) {
         trendKeywordRepository.save(TrendKeyword.of(keyword, approxTraffic));
@@ -75,6 +80,66 @@ public class TrendKeywordServiceImpl {
     }
 
     /**
+     * 최근 5분 간의 트렌드 키워드를 집계하여 Top10을 반환합니다. 부족할 경우 이전 시간대 데이터를 보완하여 항상 10개를 반환합니다.
+     *
+     * @return 실시간 트렌드 Top 10 키워드 리스트 (Map<String, Integer>)
+     */
+    @Override
+    public List<Map<String, Object>> getTop10Keywords() {
+        Instant now = Instant.now();
+
+        // 최근 5분 간 키워드 점수 수집
+        List<String> recentKeys = keywordUtil.getMinuteKeys(now, 0, 5);
+        Map<String, Double> scoreMap = new HashMap<>();
+
+        for (String key : recentKeys) {
+            Set<ZSetOperations.TypedTuple<String>> zset = redisTemplate.opsForZSet()
+                    .rangeWithScores(key, 0, -1);
+            if (zset == null) {
+                continue;
+            }
+            for (ZSetOperations.TypedTuple<String> tuple : zset) {
+                scoreMap.merge(tuple.getValue(), Objects.requireNonNull(tuple.getScore()),
+                        Double::sum);
+            }
+        }
+
+        // 점수 기준 내림차순 정렬 후 Top10 추출
+        List<Map<String, Object>> top10 = keywordUtil.sortAndLimit(scoreMap, 10);
+
+        // 만약 10개 미만이면, 5~10분 전 데이터로 보완
+        if (top10.size() < 10) {
+            Set<String> exists = keywordUtil.extractKeywords(top10);
+            List<String> backupKeys = keywordUtil.getMinuteKeys(now, 5, 10);
+
+            for (String key : backupKeys) {
+                Set<ZSetOperations.TypedTuple<String>> backup = redisTemplate.opsForZSet()
+                        .reverseRangeWithScores(key, 0, -1);
+                if (backup == null) {
+                    continue;
+                }
+                for (ZSetOperations.TypedTuple<String> tuple : backup) {
+                    if (!exists.contains(tuple.getValue())) {
+                        Map<String, Object> newItem = new HashMap<>();
+                        newItem.put("keyword", tuple.getValue());
+                        newItem.put("traffic", Objects.requireNonNull(tuple.getScore()).intValue());
+                        top10.add(newItem);
+                        exists.add(tuple.getValue());
+                    }
+                    if (top10.size() >= 10) {
+                        break;
+                    }
+                }
+                if (top10.size() >= 10) {
+                    break;
+                }
+            }
+        }
+
+        return top10;
+    }
+
+    /**
      * 최근 5분간과 과거 5분간의 Redis ZSet 데이터를 비교하여 급상승 키워드를 감지합니다.
      * <p>
      * {@link HotKeywordDetector}를 통해 시간대별 키워드 점수를 수집하고, 두 기간 사이의 변화량을 기준으로 급상승 키워드(HOT)를 판단합니다.
@@ -82,10 +147,11 @@ public class TrendKeywordServiceImpl {
      *
      * @return 급상승 키워드(Set 형태)
      */
+    @Override
     public Set<String> detectHotKeywords() {
         Instant now = Instant.now();
-        List<String> recentKeys = hotKeywordDetector.getMinuteKeys(now, 0, 5);
-        List<String> pastKeys = hotKeywordDetector.getMinuteKeys(now, 5, 10);
+        List<String> recentKeys = keywordUtil.getMinuteKeys(now, 0, 5);
+        List<String> pastKeys = keywordUtil.getMinuteKeys(now, 5, 10);
 
         Map<String, Integer> recentCounts = loadKeywordScores(recentKeys);
         Map<String, Integer> pastCounts = loadKeywordScores(pastKeys);

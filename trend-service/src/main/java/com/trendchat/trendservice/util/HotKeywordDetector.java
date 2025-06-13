@@ -1,11 +1,6 @@
 package com.trendchat.trendservice.util;
 
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.stereotype.Component;
@@ -19,15 +14,13 @@ import org.springframework.stereotype.Component;
  *
  * <ul>
  *     <li>{@link #detect(Map, Map)}: 최근 vs 과거 비교로 HOT 키워드 감지</li>
- *     <li>{@link #getMinuteKeys(Instant, int, int)}: Redis 시간 키 목록 생성</li>
  * </ul>
  */
 @Component
 public class HotKeywordDetector {
 
     private static final double HOT_THRESHOLD = 3.0;
-    private static final DateTimeFormatter FORMATTER =
-            DateTimeFormatter.ofPattern("yyyyMMddHHmm").withZone(ZoneId.of("Asia/Seoul"));
+
 
     /**
      * 주어진 최근/과거 키워드 점수를 비교하여 급상승한 키워드를 감지합니다.
@@ -52,25 +45,5 @@ public class HotKeywordDetector {
         }
 
         return hotKeywords;
-    }
-
-    /**
-     * 분 단위 기준 시간 오프셋을 기반으로 Redis ZSet 키 목록을 생성합니다.
-     * <p>
-     * 예: trend:202406061230 ~ trend:202406061234 와 같은 키 목록 생성
-     * </p>
-     *
-     * @param now         기준 시간 (보통 현재 시각)
-     * @param startOffset 시작 offset (분 단위, inclusive)
-     * @param endOffset   종료 offset (분 단위, exclusive)
-     * @return Redis ZSet 키 리스트
-     */
-    public List<String> getMinuteKeys(Instant now, int startOffset, int endOffset) {
-        List<String> keys = new ArrayList<>();
-        for (int i = startOffset; i < endOffset; i++) {
-            Instant t = now.minusSeconds(i * 60L);
-            keys.add("trend:" + FORMATTER.format(t));
-        }
-        return keys;
     }
 }
