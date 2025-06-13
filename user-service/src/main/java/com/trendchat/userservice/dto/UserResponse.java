@@ -9,7 +9,7 @@ public sealed interface UserResponse permits Get {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     record Get(
             String email,
-            String name,
+            String nickname,
             String userId
     ) implements UserResponse {
 

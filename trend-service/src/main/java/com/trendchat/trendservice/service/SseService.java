@@ -40,6 +40,7 @@ public class SseService implements NotificationService {
      *
      * @return 알림 전송을 위한 {@link SseEmitter} 인스턴스
      */
+    @Override
     public SseEmitter subscribe() {
         SseEmitter emitter = new SseEmitter(3 * 60 * 1000L);
         sseEmitterRepository.add(emitter);
@@ -66,6 +67,7 @@ public class SseService implements NotificationService {
      *
      * @param keyword 급상승 트렌드 키워드
      */
+    @Override
     public void broadcastHotKeyword(String keyword) {
         log.info("Broadcasting keyword: {}", keyword);
         for (SseEmitter emitter : sseEmitterRepository.getEmitterList()) {
