@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,6 +17,7 @@ public class ChatMessage{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String sender;
+    private String senderNickname;
     private String content;
     private LocalDateTime timestamp;
 
