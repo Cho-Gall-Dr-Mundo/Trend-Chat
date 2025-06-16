@@ -6,21 +6,24 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "chat_message")
+@Builder
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder
-public class ChatMessage{
+public class ChatRoomMember {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String sender;
-    private String senderNickname;
-    private String content;
-    private LocalDateTime timestamp;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_id")
     private ChatRoom chatRoom;
+
+    @Column(nullable = false)
+    private String userId;
+
+    @Column(nullable = false)
+    private String nicknameSnapshot;
+
+    @Column(nullable = false)
+    private LocalDateTime joinedAt;
 }
