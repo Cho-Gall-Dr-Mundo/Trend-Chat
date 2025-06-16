@@ -79,6 +79,7 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                         msg.getId(),
                         msg.getChatRoom().getId(),
                         msg.getSender(),
+                        msg.getSenderNickname(),
                         msg.getContent(),
                         msg.getTimestamp(),
                         msg.getSender().equals(currentUserId)

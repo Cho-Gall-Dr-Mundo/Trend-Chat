@@ -35,7 +35,8 @@ public class ChatMessageConsumer {
         //ChatMessage 엔티티 생성 및 DB 저장
         ChatMessage message = ChatMessage.builder()
                 .chatRoom(room)
-                .sender(dto.sender())
+                .sender(dto.senderId())
+                .senderNickname(dto.senderNickname())
                 .content(dto.content())
                 .timestamp(LocalDateTime.now())
                 .build();
@@ -46,6 +47,7 @@ public class ChatMessageConsumer {
         ChatMessageResponse response = new ChatMessageResponse(
                 message.getId(),
                 dto.roomId(),
+                dto.senderId(),
                 dto.senderNickname(),
                 message.getContent(),
                 message.getTimestamp(),

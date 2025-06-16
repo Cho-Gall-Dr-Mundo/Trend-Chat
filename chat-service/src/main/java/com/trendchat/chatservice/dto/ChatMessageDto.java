@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public record ChatMessageDto(
         Long roomId,
-        String sender,
+        String senderId,
         String senderNickname,
         String content
 ) implements Serializable {}

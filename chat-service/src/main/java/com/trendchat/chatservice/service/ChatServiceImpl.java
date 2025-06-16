@@ -34,6 +34,7 @@ public class ChatServiceImpl implements ChatService{
                         msg.getId(),
                         msg.getChatRoom().getId(),
                         msg.getSender(),
+                        msg.getSenderNickname(),
                         msg.getContent(),
                         msg.getTimestamp(),
                         msg.getSender().equals(currentUserEmail)
