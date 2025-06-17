@@ -4,15 +4,14 @@ import com.trendchat.chatservice.dto.ChatRoomResponse;
 import com.trendchat.chatservice.entity.ChatRoom;
 import com.trendchat.chatservice.service.ChatRoomService;
 import java.util.List;
+import java.util.Optional;
 
 import com.trendchat.trendchatcommon.auth.AuthUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,9 +30,20 @@ public class ChatRoomController {
         return ResponseEntity.ok(chatRoomService.getChatRoomByIdResponse(roomId, authUser.getUserId()));
     }
 
-    // 프론트에서 title만 넣으면 자동 조회/생성
+    // 조회 전용 (존재하는 채팅방만 조회)
     @GetMapping("/title/{title}")
-    public ResponseEntity<ChatRoomResponse> getOrCreateByTitle(@PathVariable String title, @AuthenticationPrincipal AuthUser authUser) {
-        return ResponseEntity.ok(chatRoomService.getOrCreateByTitle(title, authUser.getUserId()));
+    public ResponseEntity<ChatRoomResponse> getByTitle(@PathVariable String title, @AuthenticationPrincipal AuthUser authUser) {
+        Optional<ChatRoomResponse> response = chatRoomService.findResponseByTitle(title, authUser.getUserId());
+
+        return response
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
+
+    // 생성 전용 (없으면 새로 생성)
+    @PostMapping("/title/{title}")
+    public ResponseEntity<ChatRoomResponse> createByTitle(@PathVariable String title, @AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(chatRoomService.createByTitle(title, authUser.getUserId()));
+    }
+
 }

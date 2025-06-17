@@ -6,6 +6,8 @@ import com.trendchat.chatservice.entity.ChatRoom;
 import com.trendchat.chatservice.repository.ChatRoomRepository;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -63,15 +65,29 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
 
     @Override
-    public ChatRoomResponse getOrCreateByTitle(String title, String currentUserId) {
-        ChatRoom chatRoom = chatRoomRepository.findByTitleWithMessages(title)
-                .orElseGet(() -> chatRoomRepository.save(ChatRoom.builder()
-                        .title(title)
-                        .description(title + "에 대한 자동 생성된 채팅방")
-                        .createdAt(LocalDateTime.now())
-                        .build()));
+    public Optional<ChatRoomResponse> findResponseByTitle(String title, String currentUserId) {
+        return chatRoomRepository.findByTitleWithMessages(title)
+                .map(room -> toChatRoomResponse(room, currentUserId));
+    }
+
+
+    @Override
+    public ChatRoomResponse createByTitle(String title, String currentUserId) {
+        ChatRoom existingRoom = chatRoomRepository.findByTitle(title).orElse(null);
+        if (existingRoom != null) {
+            throw new IllegalStateException("이미 존재하는 채팅방입니다.");
+        }
+
+        ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.builder()
+                .title(title)
+                .description(title + "에 대한 자동 생성된 채팅방")
+                .createdAt(LocalDateTime.now())
+                .build());
+
         return toChatRoomResponse(chatRoom, currentUserId);
     }
+
+
 
     private ChatRoomResponse toChatRoomResponse(ChatRoom chatRoom, String currentUserId) {
         List<ChatMessageResponse> messages = chatRoom.getMessages().stream()
