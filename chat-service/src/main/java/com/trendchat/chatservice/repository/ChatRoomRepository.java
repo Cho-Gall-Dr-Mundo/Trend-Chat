@@ -23,4 +23,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     WHERE r.title = :title
 """)
     Optional<ChatRoom> findByTitleWithMessages(@Param("title") String title);
+
+    Optional<ChatRoom> findByTitle(String title);
+
 }
