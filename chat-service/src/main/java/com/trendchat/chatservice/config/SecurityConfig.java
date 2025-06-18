@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/api/v1/chat/stream").permitAll()
+                        .pathMatchers("/api/v1/rooms/**").permitAll()
                                 .anyExchange().authenticated()
                 )
                 .addFilterAt(authorizationFilter, SecurityWebFiltersOrder.AUTHORIZATION)

@@ -1,18 +1,24 @@
 package com.trendchat.chatservice.service;
 
 import com.trendchat.chatservice.dto.ChatMessageResponse;
+import com.trendchat.chatservice.dto.ChatRoomListResponse;
 import com.trendchat.chatservice.dto.ChatRoomResponse;
+import com.trendchat.chatservice.dto.ChatRoomStatsResponse;
 import com.trendchat.chatservice.entity.ChatRoom;
+import com.trendchat.chatservice.repository.ChatMessageRepository;
+import com.trendchat.chatservice.repository.ChatRoomMemberRepository;
 import com.trendchat.chatservice.repository.ChatRoomRepository;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -20,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class ChatRoomServiceImpl implements ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
+    private final ChatMessageRepository chatMessageRepository;
 
     @Override
     @Transactional
@@ -43,8 +51,17 @@ public class ChatRoomServiceImpl implements ChatRoomService {
     }
 
     @Override
-    public List<ChatRoom> getAllChatRooms() {
-        return chatRoomRepository.findAll();
+    public List<ChatRoomListResponse> getAllChatRooms() {
+        List<ChatRoom> chatRooms = chatRoomRepository.findAll();
+
+        return chatRooms.stream().
+                map(room -> ChatRoomListResponse.builder()
+                        .id(room.getId())
+                        .title(room.getTitle())
+                        .description(room.getDescription())
+                        .createdAt(room.getCreatedAt())
+                .build())
+                .toList();
     }
 
     @Override
@@ -87,7 +104,38 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         return toChatRoomResponse(chatRoom, currentUserId);
     }
 
+    @Override
+    public Map<Long, ChatRoomStatsResponse> getRoomStats(List<Long> roomIds) {
+        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(30);
 
+        return roomIds.stream().collect(Collectors.toMap(
+                roomId -> roomId,
+                roomId -> {
+                    int members = chatRoomMemberRepository.countByChatRoomId(roomId);
+                    int messages = chatMessageRepository.countByChatRoomIdAndTimestampAfter(roomId, cutoff);
+                    return ChatRoomStatsResponse.builder()
+                            .participants(members)
+                            .messageCount(messages)
+                            .build();
+                }
+        ));
+    }
+
+    @Override
+    public Map<Long, ChatRoomStatsResponse> getAllRoomStats() {
+        List<Long> roomIds = chatRoomRepository.findAllRoomIds();
+        return getRoomStats(roomIds);
+    }
+
+    @Override
+    public List<Long> getTop6ActiveRoomIds() {
+        LocalDateTime flag = LocalDateTime.now().minusMinutes(1440);
+        List<Object[]> topRooms = chatRoomRepository.findTop6ActiveRooms(flag);
+
+        return topRooms.stream()
+                .map(row -> (Long) row[0])
+                .collect(Collectors.toList());
+    }
 
     private ChatRoomResponse toChatRoomResponse(ChatRoom chatRoom, String currentUserId) {
         List<ChatMessageResponse> messages = chatRoom.getMessages().stream()
