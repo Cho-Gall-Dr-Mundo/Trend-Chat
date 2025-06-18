@@ -1,17 +1,19 @@
 package com.trendchat.chatservice.controller;
 
+import com.trendchat.chatservice.dto.ChatRoomListResponse;
 import com.trendchat.chatservice.dto.ChatRoomResponse;
-import com.trendchat.chatservice.entity.ChatRoom;
+import com.trendchat.chatservice.dto.ChatRoomStatsResponse;
 import com.trendchat.chatservice.service.ChatRoomService;
-import java.util.List;
-import java.util.Optional;
-
 import com.trendchat.trendchatcommon.auth.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,8 +23,8 @@ public class ChatRoomController {
     private final ChatRoomService chatRoomService;
 
     @GetMapping
-    public List<ChatRoom> getAllChatRooms() {
-        return chatRoomService.getAllChatRooms();
+    public ResponseEntity<List<ChatRoomListResponse>> getAllChatRooms() {
+        return ResponseEntity.ok(chatRoomService.getAllChatRooms());
     }
 
     @GetMapping("/{roomId}")
@@ -46,4 +48,21 @@ public class ChatRoomController {
         return ResponseEntity.ok(chatRoomService.createByTitle(title, authUser.getUserId()));
     }
 
+    // 일부 list & top5 list받으면 그것만 통계
+    @PostMapping("/stats/bulk")
+    public ResponseEntity<Map<Long, ChatRoomStatsResponse>> getRoomStats(@RequestBody List<Long> roomIds) {
+        return ResponseEntity.ok(chatRoomService.getRoomStats(roomIds));
+    }
+
+    // 전체 방 통계
+    @GetMapping("/stats/all")
+    public ResponseEntity<Map<Long, ChatRoomStatsResponse>> getAllStats() {
+        return ResponseEntity.ok(chatRoomService.getAllRoomStats());
+    }
+
+    // 상위 5개 방 ID
+    @GetMapping("/stats/top5")
+    public ResponseEntity<List<Long>> getTop6RoomIds() {
+        return ResponseEntity.ok(chatRoomService.getTop6ActiveRoomIds());
+    }
 }
