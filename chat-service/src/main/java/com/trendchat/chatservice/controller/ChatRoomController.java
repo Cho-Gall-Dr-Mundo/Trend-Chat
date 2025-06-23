@@ -3,6 +3,7 @@ package com.trendchat.chatservice.controller;
 import com.trendchat.chatservice.dto.ChatRoomListResponse;
 import com.trendchat.chatservice.dto.ChatRoomResponse;
 import com.trendchat.chatservice.dto.ChatRoomStatsResponse;
+import com.trendchat.chatservice.dto.MyRoomResponse;
 import com.trendchat.chatservice.service.ChatRoomService;
 import com.trendchat.trendchatcommon.auth.AuthUser;
 import lombok.RequiredArgsConstructor;
@@ -64,5 +65,11 @@ public class ChatRoomController {
     @GetMapping("/stats/top5")
     public ResponseEntity<List<Long>> getTop6RoomIds() {
         return ResponseEntity.ok(chatRoomService.getTop6ActiveRoomIds());
+    }
+
+    //구독중 채티방 목록
+    @GetMapping("/my")
+    public ResponseEntity<List<MyRoomResponse>> getMyRooms(@AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(chatRoomService.getMyRooms(authUser.getUserId()));
     }
 }

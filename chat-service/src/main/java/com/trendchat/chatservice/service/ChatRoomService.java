@@ -3,6 +3,7 @@ package com.trendchat.chatservice.service;
 import com.trendchat.chatservice.dto.ChatRoomListResponse;
 import com.trendchat.chatservice.dto.ChatRoomResponse;
 import com.trendchat.chatservice.dto.ChatRoomStatsResponse;
+import com.trendchat.chatservice.dto.MyRoomResponse;
 import com.trendchat.chatservice.entity.ChatRoom;
 import java.util.List;
 import java.util.Map;
@@ -27,4 +28,6 @@ public interface ChatRoomService {
     Map<Long, ChatRoomStatsResponse> getAllRoomStats();
 
     List<Long> getTop6ActiveRoomIds();
+
+    List<MyRoomResponse> getMyRooms(String userId);
 }

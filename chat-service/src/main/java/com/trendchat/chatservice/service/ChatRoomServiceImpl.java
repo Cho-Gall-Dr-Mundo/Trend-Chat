@@ -1,9 +1,6 @@
 package com.trendchat.chatservice.service;
 
-import com.trendchat.chatservice.dto.ChatMessageResponse;
-import com.trendchat.chatservice.dto.ChatRoomListResponse;
-import com.trendchat.chatservice.dto.ChatRoomResponse;
-import com.trendchat.chatservice.dto.ChatRoomStatsResponse;
+import com.trendchat.chatservice.dto.*;
 import com.trendchat.chatservice.entity.ChatRoom;
 import com.trendchat.chatservice.repository.ChatMessageRepository;
 import com.trendchat.chatservice.repository.ChatRoomMemberRepository;
@@ -134,6 +131,25 @@ public class ChatRoomServiceImpl implements ChatRoomService {
 
         return topRooms.stream()
                 .map(row -> (Long) row[0])
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<MyRoomResponse> getMyRooms(String userId) {
+        List<Long> roomIds = chatRoomRepository.findRoomIdsByUserId(userId);
+        List<ChatRoom> rooms = chatRoomRepository.findAllById(roomIds);
+        Map<Long, Long> participantCounts = chatRoomRepository.countByRoomIds(roomIds).stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+
+        return rooms.stream()
+                .map(room -> new MyRoomResponse(
+                        room.getId(),
+                        room.getTitle(),
+                        (long) participantCounts.getOrDefault(room.getId(), 0L).intValue()
+                ))
                 .collect(Collectors.toList());
     }
 

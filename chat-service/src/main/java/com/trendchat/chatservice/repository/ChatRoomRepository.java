@@ -40,4 +40,19 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
         LIMIT 6
     """)
     List<Object[]> findTop6ActiveRooms(@Param("after") LocalDateTime after);
+
+    @Query("SELECT DISTINCT c.chatRoom.id FROM ChatRoomMember c WHERE c.userId = :userId")
+    List<Long> findRoomIdsByUserId(String userId);
+
+    @Query("""
+    SELECT m.chatRoom.id, COUNT(m)
+    FROM ChatRoomMember m
+    WHERE m.chatRoom.id IN :roomIds
+    GROUP BY m.chatRoom.id
+""")
+    List<Object[]> countByRoomIds(@Param("roomIds") List<Long> roomIds);
+
+
+
+
 }
