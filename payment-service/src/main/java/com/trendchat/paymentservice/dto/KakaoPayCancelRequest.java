@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KakaoPayCancelRequest {
-    private String userId;
     private String tid;
+    private String userId;
 }

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KakaoPayReadyRequest {
+    private String userId;
     private String itemName;
     private int quantity;
     private int totalAmount;

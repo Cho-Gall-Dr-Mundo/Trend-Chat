@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KakaoPayApproveRequest {
-    private String pgToken;
     private String tid;
+    private String pgToken;
     private String userId;
 }
