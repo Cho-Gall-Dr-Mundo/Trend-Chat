@@ -1,58 +1,58 @@
 package com.trendchat.trendservice.util;
 
-import com.trendchat.trendservice.dto.TrendItem;
+import com.trendchat.trendservice.dto.NewsItem;
+import com.trendchat.trendservice.dto.TrendKeywordItem;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Component;
 
 /**
- * Google Trends 웹사이트에서 실시간 트렌드 키워드 정보를 크롤링하는 유틸리티 컴포넌트입니다.
+ * Google Trends 실시간 급상승 키워드 및 관련 뉴스 기사 정보를 크롤링하는 유틸리티 컴포넌트입니다.
  * <p>
- * Shadow DOM 기반의 동적 웹 페이지를 Selenium WebDriver와 JavaScript 실행을 통해 분석하며, 키워드, 추정 검색량, 상태, 시간 등의 정보를
- * {@link com.trendchat.trendservice.dto.TrendItem} 형태로 반환합니다.
- * </p>
- *
+ * Selenium WebDriver를 이용해 동적 렌더링 및 Shadow DOM이 적용된 Google Trends 페이지를 자동화 브라우저로 탐색하며, 키워드, 검색량, 상태,
+ * 시간 및 관련 뉴스(제목, URL, 썸네일, 메타정보)를 {@link TrendKeywordItem} 형태로 수집합니다.
  * <ul>
  *     <li>대상 URL: {@code https://trends.google.co.kr/trending?geo=KR&hours=4}</li>
- *     <li>헤드리스 Chrome 브라우저로 실행</li>
- *     <li>수집된 데이터는 {@code Map<String, TrendItem>} 형태로 반환됨</li>
+ *     <li>Headless Chrome 기반 Selenium WebDriver 활용</li>
+ *     <li>키워드별로 다수의 뉴스 기사 정보를 포함하여 반환</li>
  * </ul>
  *
- * @see com.trendchat.trendservice.dto.TrendItem
+ * @see TrendKeywordItem
+ * @see NewsItem
  */
 @Slf4j
 @Component
 public class GoogleTrendsCrawler {
 
     /**
-     * Google Trends 웹사이트에서 실시간 트렌드 키워드를 크롤링하여 정제된 형태로 반환합니다.
+     * Google Trends 실시간 트렌드 키워드와 각 키워드별 뉴스 기사 정보를 크롤링합니다.
      * <p>
-     * 이 메서드는 Selenium WebDriver를 사용하여 Shadow DOM 기반의 동적 페이지를 탐색하고, JavaScript 실행을 통해 키워드, 검색량, 상태,
-     * 시간 정보를 추출한 뒤, {@link TrendItem} 객체로 변환하여 키워드 이름을 key로 하는 Map에 담아 반환합니다.
+     * - 크롬 headless 모드로 페이지 접속 후 키워드 카드를 순회하며 정보를 추출합니다.<br> - 각 카드 클릭 시 오버레이/광고/팝업 등 방해 요소를 제거하여
+     * 뉴스 영역을 활성화합니다.<br> - 키워드별로 뉴스 기사({@link NewsItem})들을 추출, {@link TrendKeywordItem}에 함께
+     * 저장합니다.<br> - 크롤링 과정 및 결과를 상세 로그로 남깁니다.
      * </p>
      *
-     * <ul>
-     *     <li>접속 URL: {@code https://trends.google.co.kr/trending?geo=KR&hours=4}</li>
-     *     <li>Headless Chrome 환경에서 실행되며, 렌더링 대기를 위해 5초간 sleep됩니다.</li>
-     *     <li>각 카드에서 추출한 데이터 형식은 {@code "키워드|검색량|상태|시간"}입니다.</li>
-     * </ul>
-     *
-     * @return 키워드를 key로, {@link TrendItem} 정보를 value로 가지는 Map 객체
+     * @return 키워드를 key로 하고, 해당 키워드의 검색량, 상태, 시간, 뉴스 기사 목록을 value로 갖는 Map 객체
      */
-    public Map<String, TrendItem> crawl() {
+    public Map<String, TrendKeywordItem> crawl() {
         WebDriverManager.chromedriver().setup();
 
         ChromeOptions options = new ChromeOptions();
-
-        // Chrome 브라우저 옵션 설정
         options.addArguments("--headless=new");
         options.addArguments("--disable-gpu");
         options.addArguments("--no-sandbox");
@@ -60,40 +60,104 @@ public class GoogleTrendsCrawler {
         options.addArguments("user-agent=Mozilla/5.0");
 
         WebDriver driver = new ChromeDriver(options);
-        Map<String, TrendItem> resultMap = new HashMap<>();
+        Map<String, TrendKeywordItem> resultMap = new HashMap<>();
 
+        long started = System.currentTimeMillis();
         try {
             driver.get("https://trends.google.co.kr/trending?geo=KR&hours=4");
-            Thread.sleep(5000); // JS 렌더링 시간 대기 (안정적인 수집을 위해)
+            Thread.sleep(4000); // 최초 렌더링 대기
 
-            // Shadow DOM 포함된 카드 정보 추출 (JavaScript로 직접 DOM 탐색)
             JavascriptExecutor js = (JavascriptExecutor) driver;
-            String script = """
-                        const cards = document.querySelectorAll('td.enOdEe-wZVHld-aOtOmf');
-                        return Array.from(cards).map(card => {
-                            const keyword = card.querySelector('.mZ3RIc')?.innerText || "";
-                            const volume = card.querySelector('.qNpYPd')?.innerText || "";
-                            const status = card.querySelector('.QxIiwc')?.innerText || "";
-                            const time = card.querySelector('.A7jE4')?.innerText || "";
-                            return `${keyword}|${volume}|${status}|${time}`;
-                        });
-                    """;
+            List<WebElement> allCards = driver.findElements(
+                    By.cssSelector("td.enOdEe-wZVHld-aOtOmf"));
+            List<WebElement> keywordCards = new ArrayList<>();
 
-            @SuppressWarnings("unchecked")
-            List<String> rawResults = (List<String>) js.executeScript(script);
+            for (WebElement card : allCards) {
+                try {
+                    String keyword = card.findElement(By.cssSelector(".mZ3RIc")).getText();
+                    if (!keyword.isBlank()) {
+                        keywordCards.add(card);
+                    }
+                } catch (NoSuchElementException e) {
+                    // 키워드 없는 td는 skip
+                }
+            }
 
-            for (String line : Objects.requireNonNull(rawResults)) {
-                String[] parts = line.split("\\|", -1); // 빈 값도 포함
+            log.info("실제 크롤링 대상 키워드 카드 수: {}", keywordCards.size());
 
-                if (parts.length >= 1 && !parts[0].isBlank()) {
-                    String keyword = parts[0];
-                    String volume = parts.length > 1 ? parts[1] : "";
-                    int numericVolume = parseVolume(volume);
-                    String status = parts.length > 2 ? parts[2] : "";
-                    String time = parts.length > 3 ? parts[3] : "";
+            for (int i = 0; i < keywordCards.size(); i++) {
+                WebElement card = keywordCards.get(i);
+                log.info("[{}] 카드 진입", i);
 
-                    TrendItem item = new TrendItem(numericVolume, status, time);
-                    resultMap.put(keyword, item);
+                try {
+                    // 오버레이 제거
+                    js.executeScript(
+                            "document.querySelectorAll('.pYTkkf-Bz112c-RLmnJb, .pYTkkf-Bz112c, .gb_Lc, .gb_Ad, [role=\"presentation\"]').forEach(e => e.remove());"
+                    );
+
+                    js.executeScript("arguments[0].scrollIntoView({block:'center'});", card);
+                    js.executeScript("arguments[0].click();", card);
+
+                    // 뉴스 컨테이너 등장 대기 (2.5초 이내)
+                    try {
+                        new WebDriverWait(driver, Duration.ofMillis(2500))
+                                .until(ExpectedConditions.visibilityOfElementLocated(
+                                        By.cssSelector(".jDtQ5 a.xZCHj")));
+                    } catch (TimeoutException e) {
+                        log.warn("[{}] 뉴스 등장 대기 timeout", i);
+                    }
+
+                    // 중복 뉴스 방지
+                    List<WebElement> newsContainers = driver.findElements(By.cssSelector(".jDtQ5"));
+                    List<NewsItem> newsList = new ArrayList<>();
+                    if (!newsContainers.isEmpty()) {
+                        WebElement latestNews = newsContainers.get(newsContainers.size() - 1);
+                        List<WebElement> newsLinks = latestNews.findElements(
+                                By.cssSelector("a.xZCHj"));
+                        log.info("[{}] 추출된 뉴스 개수: {}", i, newsLinks.size());
+                        for (WebElement a : newsLinks) {
+                            String url = a.getAttribute("href");
+                            String title = "";
+                            String meta = "";
+                            String thumbnail = "";
+                            try {
+                                title = a.findElement(By.cssSelector(".QbLC8c")).getText();
+                            } catch (Exception ignore) {
+                            }
+                            try {
+                                meta = a.findElement(By.cssSelector(".pojp0c")).getText();
+                            } catch (Exception ignore) {
+                            }
+                            try {
+                                thumbnail = a.findElement(By.cssSelector(".QtVIpe"))
+                                        .getAttribute("src");
+                            } catch (Exception ignore) {
+                            }
+                            newsList.add(new NewsItem(title, url, meta, thumbnail));
+                        }
+                    }
+
+                    // 카드 정보 파싱(JS)
+                    String info = (String) js.executeScript(
+                            "var card=arguments[0];const keyword=card.querySelector('.mZ3RIc')?.innerText||'';const volume=card.querySelector('.qNpYPd')?.innerText||'';const status=card.querySelector('.QxIiwc')?.innerText||'';const time=card.querySelector('.A7jE4')?.innerText||'';return `${keyword}|${volume}|${status}|${time}`;",
+                            card
+                    );
+                    log.info("[{}] 카드 정보: {}", i, info);
+
+                    String[] parts = info.split("\\|", -1);
+                    if (parts.length >= 1 && !parts[0].isBlank()) {
+                        String keyword = parts[0];
+                        String volume = parts.length > 1 ? parts[1] : "";
+                        int numericVolume = parseVolume(volume);
+                        String status = parts.length > 2 ? parts[2] : "";
+                        String time = parts.length > 3 ? parts[3] : "";
+                        TrendKeywordItem item = new TrendKeywordItem(numericVolume, status, time,
+                                newsList);
+                        log.info("[{}] TrendItem 저장: {} (뉴스수: {})", i, keyword, newsList.size());
+                        resultMap.put(keyword, item);
+                    }
+                } catch (Exception e) {
+                    log.error("[{}] 카드 크롤링 중 예외", i, e);
                 }
             }
 
@@ -103,26 +167,27 @@ public class GoogleTrendsCrawler {
             driver.quit();
         }
 
+        long elapsed = System.currentTimeMillis() - started;
+        log.info("크롤링 전체 소요 시간(ms): {}", elapsed);
+
         return resultMap;
     }
 
     /**
-     * 검색량 정량화 메서드
+     * "검색 2천+회" 등과 같은 문자열에서 정량화된 검색량 값을 추출합니다.
      *
-     * @param volumeText "검색 2천+회" 같은 형식의 문자열
-     * @return 정량화된 정수값 (예: 2000)
+     * @param volumeText 예: "검색 2천+회", "3만+회" 등
+     * @return 숫자로 변환된 검색량 (예: 2000, 30000)
      */
     private int parseVolume(String volumeText) {
         if (volumeText == null || volumeText.isBlank()) {
             return 0;
         }
-
-        // 전처리: "검색", "회", "+", 공백 제거
         volumeText = volumeText
                 .replace("검색", "")
                 .replace("회", "")
                 .replace("+", "")
-                .replaceAll("\\s", ""); // 공백 제거
+                .replaceAll("\\s", "");
 
         try {
             if (volumeText.contains("만")) {

@@ -1,6 +1,6 @@
 package com.trendchat.trendservice.job;
 
-import com.trendchat.trendservice.dto.TrendItem;
+import com.trendchat.trendservice.dto.TrendKeywordItem;
 import com.trendchat.trendservice.service.TrendKeywordServiceImpl;
 import com.trendchat.trendservice.util.GoogleTrendsCrawler;
 import com.trendchat.trendservice.util.TrendKeywordProducer;
@@ -45,9 +45,9 @@ public class GoogleTrendsCrawlJob implements Job {
      */
     @Override
     public void execute(JobExecutionContext jobExecutionContext) {
-        Map<String, TrendItem> trendItemMap = googleTrendsCrawler.crawl();
+        Map<String, TrendKeywordItem> trendItemMap = googleTrendsCrawler.crawl();
 
-        for (Map.Entry<String, TrendItem> entry : trendItemMap.entrySet()) {
+        for (Map.Entry<String, TrendKeywordItem> entry : trendItemMap.entrySet()) {
             trendKeywordService.createTrendKeyword(
                     entry.getKey(),
                     entry.getValue().approxTraffic()
