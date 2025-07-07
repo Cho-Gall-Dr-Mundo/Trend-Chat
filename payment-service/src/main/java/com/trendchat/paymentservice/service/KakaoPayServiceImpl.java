@@ -1,190 +1,135 @@
 package com.trendchat.paymentservice.service;
 
+import com.trendchat.paymentservice.client.kakaoPayClient;
 import com.trendchat.paymentservice.dto.*;
-import com.trendchat.paymentservice.entity.Payment;
-import com.trendchat.paymentservice.enums.PaymentStatus;
-import com.trendchat.paymentservice.repository.PaymentRepository;
+import com.trendchat.paymentservice.dto.*;
+import com.trendchat.paymentservice.entity.Subscription;
+import com.trendchat.paymentservice.enums.SubscriptionStatus;
+import com.trendchat.paymentservice.repository.SubscriptionRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.UUID;
+import java.time.LocalDateTime;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class KakaoPayServiceImpl implements KakaoPayService {
 
-    @Value("${kakaopay.secret-key}")
-    private String secretKey;
+    private final kakaoPayClient kakaoPayClient;
+    private final SubscriptionRepository subscriptionRepository;
+//    private final UserRoleUpdateService userRoleUpdateService;
 
     @Value("${kakaopay.cid}")
     private String cid;
 
-    private final PaymentRepository paymentRepository;
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Value("${kakaopay.client-id}")
+    private String clientId;
 
-    @Override
-    public KakaoPayReadyResponse kakaoPayReady(KakaoPayReadyRequest request) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.set("Authorization", "SECRET_KEY " + secretKey);
+    @Value("${kakaopay.client-secret}")
+    private String clientSecret;
 
-        String orderId = UUID.randomUUID().toString();
+    private static final String APPROVAL_URL = "http://localhost:3000/subscribe/success";
+    private static final String CANCEL_URL = "http://localhost:3000/subscribe/cancel";
+    private static final String FAIL_URL = "http://localhost:3000/subscribe/fail";
 
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("cid", cid);
-        body.add("partner_order_id", orderId);
-        body.add("partner_user_id", "user_" + request.getUserId());
-        body.add("item_name", request.getItemName());
-        body.add("quantity", String.valueOf(request.getQuantity()));
-        body.add("total_amount", String.valueOf(request.getTotalAmount()));
-        body.add("tax_free_amount", "0");
-        body.add("approval_url", "http://localhost:3000/subscribe/checkout");
-        body.add("cancel_url", "http://localhost:3000/subscribe/cancel");
-        body.add("fail_url", "http://localhost:3000/subscribe/fail");
-
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
-
-        try {
-            ResponseEntity<KakaoPayReadyResponse> response = restTemplate.postForEntity(
-                    "https://open-api.kakaopay.com/online/v1/payment/ready",
-                    entity,
-                    KakaoPayReadyResponse.class
-            );
-
-            KakaoPayReadyResponse responseBody = response.getBody();
-
-            Payment payment = new Payment(
-                    request.getUserId(),
-                    responseBody.getTid(),
-                    "KAKAOPAY",
-                    request.getTotalAmount(),
-                    PaymentStatus.READY,
-                    orderId
-            );
-            paymentRepository.save(payment);
-
-            return responseBody;
-        } catch (Exception e) {
-            log.error("[카카오페이 Ready 에러 응답]", e);
-            throw new RuntimeException("카카오페이 결제 준비 실패");
-        }
+    private String authHeader() {
+        return "SecretKey " + clientSecret;
     }
 
     @Override
-    public void kakaoPayApprove(KakaoPayApproveRequest request) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.set("Authorization", "SECRET_KEY " + secretKey);
-
-        Payment payment = paymentRepository.findByTid(request.getTid())
-                .orElseThrow(() -> new RuntimeException("결제 정보가 존재하지 않습니다."));
-
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("cid", cid);
-        body.add("tid", request.getTid());
-        body.add("partner_order_id", payment.getPartnerOrderId());
-        body.add("partner_user_id", "user_" + payment.getUserId());
-        body.add("pg_token", request.getPgToken());
-
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
-
-        try {
-            restTemplate.postForEntity(
-                    "https://open-api.kakaopay.com/online/v1/payment/approve",
-                    entity,
-                    Object.class
-            );
-
-            payment.changeStatus(PaymentStatus.SUCCESS);
-            try {
-                changeUserRoleToPremium(payment.getUserId());
-                payment.markRoleUpgraded();
-            } catch (Exception e) {
-                log.warn("롤 변경 실패 - userId: {}, tid: {}", payment.getUserId(), payment.getTid(), e);
-            }
-
-            paymentRepository.save(payment);
-        } catch (Exception e) {
-            payment.changeStatus(PaymentStatus.FAILED);
-            paymentRepository.save(payment);
-            throw new RuntimeException("결제 승인 실패", e);
+    @Transactional
+    public KakaoPayReadyResponse subscribe(String userId) {
+        if (subscriptionRepository.existsByUserId(userId)) {
+            throw new IllegalStateException("이미 구독 중인 사용자입니다.");
         }
+
+        KakaoPayReadyRequest request = KakaoPayReadyRequest.builder()
+                .cid(cid)
+                .partnerOrderId("trendchat-subscription-" + userId)
+                .partnerUserId(String.valueOf(userId))
+                .itemName("TrendChat 프리미엄 구독")
+                .quantity(1)
+                .totalAmount(1000)
+                .taxFreeAmount(0)
+                .vatAmount(0)
+                .approvalUrl(APPROVAL_URL + "?userId=" + userId)
+                .cancelUrl(CANCEL_URL)
+                .failUrl(FAIL_URL)
+                .build();
+
+        KakaoPayReadyResponse response = kakaoPayClient.ready(authHeader(), request);
+
+        Subscription subscription = Subscription.builder()
+                .userId(userId)
+                .sid(response.getTid()) // 임시 저장
+                .status(SubscriptionStatus.READY)
+                .build();
+
+        subscriptionRepository.save(subscription);
+        return response;
     }
 
     @Override
-    public void handleKakaoPayCancel(KakaoPayCancelRequest request) {
-        Payment payment = new Payment(
-                request.getUserId(),
-                request.getTid(),
-                "KAKAOPAY",
-                0,
-                PaymentStatus.CANCELLED,
-                "CANCELLED_ORDER"
-        );
-        paymentRepository.save(payment);
+    @Transactional
+    public KakaoPayApproveResponse approve(Long userId, String pgToken, String tid) {
+        Subscription subscription = subscriptionRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalStateException("구독 정보가 없습니다."));
+
+        KakaoPayApproveRequest request = KakaoPayApproveRequest.builder()
+                .cid(cid)
+                .tid(tid)
+                .partnerOrderId("trendchat-subscription-" + userId)
+                .partnerUserId(String.valueOf(userId))
+                .pgToken(pgToken)
+                .build();
+
+        KakaoPayApproveResponse response = kakaoPayClient.approve(authHeader(), request);
+
+        subscription.activate(LocalDateTime.now());
+        subscriptionRepository.save(subscription);
+
+//        userRoleUpdateService.upgradeToPremium(userId);
+
+        return response;
     }
 
     @Override
-    public void handleKakaoPayFail(KakaoPayFailRequest request) {
-        Payment payment = new Payment(
-                request.getUserId(),
-                request.getTid(),
-                "KAKAOPAY",
-                0,
-                PaymentStatus.FAILED,
-                "FAILED_ORDER"
-        );
-        paymentRepository.save(payment);
+    @Transactional
+    public KakaoPayInactiveResponse cancel(Long userId) {
+        Subscription subscription = subscriptionRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalStateException("구독 정보가 없습니다."));
+
+        if (subscription.getStatus() != SubscriptionStatus.ACTIVE) {
+            throw new IllegalStateException("활성 상태가 아닙니다.");
+        }
+
+        KakaoPayInactiveRequest request = KakaoPayInactiveRequest.builder()
+                .cid(cid)
+                .sid(subscription.getSid())
+                .build();
+
+        KakaoPayInactiveResponse response = kakaoPayClient.deactivate(authHeader(), request);
+
+        subscription.deactivate(LocalDateTime.now());
+        subscriptionRepository.save(subscription);
+
+//        userRoleUpdateService.downgradeToFree(userId);
+
+        return response;
     }
 
     @Override
-    public void refundPayment(KakaoPayRefundRequest request) {
-        Payment payment = paymentRepository.findById(request.getPaymentId())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 결제 ID입니다."));
+    public KakaoPaySubscriptionStatusResponse getStatus(Long userId) {
+        Subscription subscription = subscriptionRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalStateException("구독 정보가 없습니다."));
 
-        if (payment.getStatus() != PaymentStatus.SUCCESS) {
-            throw new IllegalStateException("환불은 성공한 결제에 대해서만 가능합니다.");
-        }
+        KakaoPaySubscriptionStatusRequest request = KakaoPaySubscriptionStatusRequest.builder()
+                .cid(cid)
+                .sid(subscription.getSid())
+                .build();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.set("Authorization", "SECRET_KEY " + secretKey);
-
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("cid", cid);
-        body.add("tid", payment.getTid());
-        body.add("cancel_amount", String.valueOf(request.getCancelAmount()));
-        body.add("cancel_tax_free_amount", String.valueOf(request.getCancelTaxFreeAmount()));
-
-        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
-
-        try {
-            restTemplate.postForEntity(
-                    "https://open-api.kakaopay.com/online/v1/payment/cancel",
-                    entity,
-                    String.class
-            );
-
-            payment.changeStatus(PaymentStatus.REFUNDED);
-            paymentRepository.save(payment);
-        } catch (Exception e) {
-            throw new RuntimeException("환불 처리 중 오류 발생", e);
-        }
-    }
-
-    public void changeUserRoleToPremium(String userId) {
-        try {
-            String url = "http://user-service/api/internal/users/" + userId + "/upgrade-role";
-            restTemplate.postForEntity(url, null, Void.class);
-        } catch (Exception e) {
-            throw new RuntimeException("유저 롤 변경 실패", e);
-        }
+        return kakaoPayClient.getStatus(authHeader(), request);
     }
 }

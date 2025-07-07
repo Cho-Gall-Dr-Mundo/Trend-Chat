@@ -1,15 +1,12 @@
 package com.trendchat.paymentservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@Builder
-public class KakaoPayApproveRequest {
+public class KakaoPayApproveResponse {
 
-    private String cid;
-
+    private String aid;
     private String tid;
 
     @JsonProperty("partner_order_id")
@@ -18,6 +15,11 @@ public class KakaoPayApproveRequest {
     @JsonProperty("partner_user_id")
     private String partnerUserId;
 
-    @JsonProperty("pg_token")
-    private String pgToken;
+    private String itemName;
+
+    @JsonProperty("quantity")
+    private int quantity;
+
+    @JsonProperty("approved_at")
+    private String approvedAt;
 }
