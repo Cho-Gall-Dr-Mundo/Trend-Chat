@@ -1,17 +1,22 @@
 package com.trendchat.paymentservice.service;
 
 import com.trendchat.paymentservice.client.kakaoPayClient;
-import com.trendchat.paymentservice.dto.*;
-import com.trendchat.paymentservice.dto.*;
+import com.trendchat.paymentservice.dto.KakaoPayApproveRequest;
+import com.trendchat.paymentservice.dto.KakaoPayApproveResponse;
+import com.trendchat.paymentservice.dto.KakaoPayInactiveRequest;
+import com.trendchat.paymentservice.dto.KakaoPayInactiveResponse;
+import com.trendchat.paymentservice.dto.KakaoPayReadyRequest;
+import com.trendchat.paymentservice.dto.KakaoPayReadyResponse;
+import com.trendchat.paymentservice.dto.KakaoPaySubscriptionStatusRequest;
+import com.trendchat.paymentservice.dto.KakaoPaySubscriptionStatusResponse;
 import com.trendchat.paymentservice.entity.Subscription;
 import com.trendchat.paymentservice.enums.SubscriptionStatus;
 import com.trendchat.paymentservice.repository.SubscriptionRepository;
 import jakarta.transaction.Transactional;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -30,12 +35,18 @@ public class KakaoPayServiceImpl implements KakaoPayService {
     @Value("${kakaopay.client-secret}")
     private String clientSecret;
 
+    @Value("${kakaopay.secret-key}")
+    private String secretKey;
+
+    @Value("${kakaopay.admin-key}")
+    private String adminKey;
+
     private static final String APPROVAL_URL = "http://localhost:3000/subscribe/success";
     private static final String CANCEL_URL = "http://localhost:3000/subscribe/cancel";
     private static final String FAIL_URL = "http://localhost:3000/subscribe/fail";
 
     private String authHeader() {
-        return "SecretKey " + clientSecret;
+        return "KakaoAK" + adminKey;
     }
 
     @Override
@@ -73,7 +84,7 @@ public class KakaoPayServiceImpl implements KakaoPayService {
 
     @Override
     @Transactional
-    public KakaoPayApproveResponse approve(Long userId, String pgToken, String tid) {
+    public KakaoPayApproveResponse approve(String userId, String pgToken, String tid) {
         Subscription subscription = subscriptionRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalStateException("구독 정보가 없습니다."));
 
@@ -81,11 +92,15 @@ public class KakaoPayServiceImpl implements KakaoPayService {
                 .cid(cid)
                 .tid(tid)
                 .partnerOrderId("trendchat-subscription-" + userId)
-                .partnerUserId(String.valueOf(userId))
+                .partnerUserId(userId)
                 .pgToken(pgToken)
                 .build();
 
         KakaoPayApproveResponse response = kakaoPayClient.approve(authHeader(), request);
+
+        if (response.getSid() != null ) {
+            subscription.updateSid(response.getSid());
+        }
 
         subscription.activate(LocalDateTime.now());
         subscriptionRepository.save(subscription);
@@ -97,7 +112,7 @@ public class KakaoPayServiceImpl implements KakaoPayService {
 
     @Override
     @Transactional
-    public KakaoPayInactiveResponse cancel(Long userId) {
+    public KakaoPayInactiveResponse cancel(String userId) {
         Subscription subscription = subscriptionRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalStateException("구독 정보가 없습니다."));
 
@@ -121,7 +136,7 @@ public class KakaoPayServiceImpl implements KakaoPayService {
     }
 
     @Override
-    public KakaoPaySubscriptionStatusResponse getStatus(Long userId) {
+    public KakaoPaySubscriptionStatusResponse getStatus(String userId) {
         Subscription subscription = subscriptionRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalStateException("구독 정보가 없습니다."));
 

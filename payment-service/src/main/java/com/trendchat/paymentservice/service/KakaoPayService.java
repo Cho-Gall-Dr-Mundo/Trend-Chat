@@ -7,11 +7,11 @@ import com.trendchat.paymentservice.dto.KakaoPaySubscriptionStatusResponse;
 
 public interface KakaoPayService {
 
-    KakaoPayReadyResponse subscribe(Long userId);
+    KakaoPayReadyResponse subscribe(String userId);
 
-    KakaoPayApproveResponse approve(Long userId, String pgToken, String tid);
+    KakaoPayApproveResponse approve(String userId, String pgToken, String tid);
 
-    KakaoPayInactiveResponse cancel(Long userId);
+    KakaoPayInactiveResponse cancel(String userId);
 
-    KakaoPaySubscriptionStatusResponse getStatus(Long userId);
+    KakaoPaySubscriptionStatusResponse getStatus(String userId);
 }

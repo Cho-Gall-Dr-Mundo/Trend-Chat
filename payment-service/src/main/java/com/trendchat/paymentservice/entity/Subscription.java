@@ -66,4 +66,8 @@ public class Subscription {
         this.status = SubscriptionStatus.INACTIVE;
         this.canceledAt = canceledAt;
     }
+
+    public void updateSid(String sid) {
+        this.sid = sid;
+    }
 }

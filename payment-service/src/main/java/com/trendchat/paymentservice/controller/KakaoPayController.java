@@ -27,9 +27,7 @@ public class KakaoPayController {
      */
     @PostMapping("/subscribe")
     public ResponseEntity<KakaoPayReadyResponse> subscribe(@AuthenticationPrincipal AuthUser authUser) {
-        String userId = authUser.getUserId();
-        KakaoPayReadyResponse response = kakaoPayService.subscribe(userId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(kakaoPayService.subscribe(authUser.getUserId()));
     }
 
     /**
@@ -38,31 +36,26 @@ public class KakaoPayController {
      */
     @GetMapping("/kakaopay/approve")
     public ResponseEntity<KakaoPayApproveResponse> approve(
-            @RequestParam("userId") String userId,
+            @AuthenticationPrincipal AuthUser authUser,
             @RequestParam("pg_token") String pgToken,
-            @RequestParam("tid") String tid
-    ) {
-        KakaoPayApproveResponse response = kakaoPayService.approve(userId, pgToken, tid);
-        return ResponseEntity.ok(response);
+            @RequestParam("tid") String tid) {
+        return ResponseEntity.ok(kakaoPayService.approve(authUser.getUserId(), pgToken, tid));
+
     }
 
     /**
-     * 정기결제 해지 (카카오페이 측에 구독 취소 요청)
+     * 구독 상태 조회
      */
-    @PostMapping("/unsubscribe")
-    public ResponseEntity<KakaoPayInactiveResponse> unsubscribe(@AuthenticationPrincipal AuthUser authUser) {
-        Long userId = Long.parseLong(authUser.getUserId());
-        KakaoPayInactiveResponse response = kakaoPayService.cancel(userId);
-        return ResponseEntity.ok(response);
-    }
-
-    /**
-     * 정기결제 상태 조회 (카카오페이에서 현재 구독 상태 확인)
-     */
-    @GetMapping("/status")
+    @GetMapping("/subscription/status")
     public ResponseEntity<KakaoPaySubscriptionStatusResponse> getStatus(@AuthenticationPrincipal AuthUser authUser) {
-        String userId = authUser.getUserId();
-        KakaoPaySubscriptionStatusResponse response = kakaoPayService.getStatus(userId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(kakaoPayService.getStatus(authUser.getUserId()));
+    }
+
+    /**
+     * 구독 해지
+     */
+    @PostMapping("/subscription/cancel")
+    public ResponseEntity<KakaoPayInactiveResponse> cancel(@AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(kakaoPayService.cancel(authUser.getUserId()));
     }
 }

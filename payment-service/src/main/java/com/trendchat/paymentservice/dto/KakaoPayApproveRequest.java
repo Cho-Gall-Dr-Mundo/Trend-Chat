@@ -9,7 +9,6 @@ import lombok.Getter;
 public class KakaoPayApproveRequest {
 
     private String cid;
-
     private String tid;
 
     @JsonProperty("partner_order_id")

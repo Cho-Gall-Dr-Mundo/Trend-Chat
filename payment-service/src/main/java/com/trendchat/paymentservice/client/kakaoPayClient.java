@@ -1,6 +1,5 @@
 package com.trendchat.paymentservice.client;
 
-import com.trendchat.paymentservice.config.KakaoPayFeignConfig;
 import com.trendchat.paymentservice.dto.KakaoPayApproveRequest;
 import com.trendchat.paymentservice.dto.KakaoPayApproveResponse;
 import com.trendchat.paymentservice.dto.KakaoPayInactiveRequest;
@@ -16,30 +15,29 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient (
         name = "kakaoPayClient",
-        url = "https://open-api.kakaopay.com",
-        configuration = KakaoPayFeignConfig.class
+        url = "https://open-api.kakaopay.com/online/v1/payment"
 )
 public interface kakaoPayClient {
 
-    @PostMapping("/online/v1/payment/ready")
+    @PostMapping("/ready")
     KakaoPayReadyResponse ready(
             @RequestHeader("Authorization") String authorization,
             @RequestBody KakaoPayReadyRequest request
     );
 
-    @PostMapping("/online/v1/payment/approve")
+    @PostMapping("/approve")
     KakaoPayApproveResponse approve(
             @RequestHeader("Authorization") String authorization,
             @RequestBody KakaoPayApproveRequest request
     );
 
-    @PostMapping("/online/v1/payment/manage/inactive")
+    @PostMapping("/inactive")
     KakaoPayInactiveResponse deactivate(
             @RequestHeader("Authorization") String authorization,
             @RequestBody KakaoPayInactiveRequest request
     );
 
-    @PostMapping("/online/v1/payment/subscription/status")
+    @PostMapping("/status")
     KakaoPaySubscriptionStatusResponse getStatus(
             @RequestHeader("Authorization") String authorization,
             @RequestBody KakaoPaySubscriptionStatusRequest request
