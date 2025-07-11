@@ -11,6 +11,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
+/**
+ * 트렌드 키워드 점수 처리 및 관련 보조 기능을 제공하는 유틸리티 컴포넌트입니다.
+ * <p>
+ * - 키워드 점수(Map) 정렬 및 상위 N개 추출<br> - 키워드 리스트에서 문자열 Set 추출<br> - Redis ZSet 조회를 위한 시간별 키 생성 등<br> 트렌드
+ * 집계, 순위 산정, 분 단위 실시간 분석 등에 활용됩니다.
+ * </p>
+ */
 @Component
 public class KeywordUtil {
 
