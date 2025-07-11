@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/trends")
+@RequestMapping("/api/v1/trend-keywords")
 public class TrendKeywordController {
 
     private final TrendKeywordService trendKeywordService;

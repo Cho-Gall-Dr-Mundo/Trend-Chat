@@ -35,7 +35,6 @@ public class CategoryInitializer implements ApplicationRunner {
                 "IT/과학", List.of("인터넷/통신", "모바일/가전", "게임/콘텐츠", "미래기술/AI", "과학일반"),
                 "스포츠", List.of("축구", "야구", "농구/배구", "골프", "스포츠일반"),
                 "세계", List.of("아시아/중동", "미주/유럽/아프리카", "국제기구")
-                // 나머지 대분류는 세부분류 없음
         );
 
         // 1. MajorCategory 모두 저장

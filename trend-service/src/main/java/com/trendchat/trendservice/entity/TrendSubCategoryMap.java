@@ -29,4 +29,13 @@ public class TrendSubCategoryMap {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sub_category_id")
     private SubCategory subCategory;
+
+    private TrendSubCategoryMap(Trend trend, SubCategory subCategory) {
+        this.trend = trend;
+        this.subCategory = subCategory;
+    }
+
+    public static TrendSubCategoryMap of(Trend trend, SubCategory subCategory) {
+        return new TrendSubCategoryMap(trend, subCategory);
+    }
 }
