@@ -31,8 +31,10 @@ public class ChatRoom {
 
     @Column(nullable = false, length = 50, unique = true)
     private String title;
-    
+
+    @Column(length = 1000)
     private String description;
+    
     private LocalDateTime createdAt;
 
     @Builder.Default
