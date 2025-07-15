@@ -11,7 +11,7 @@ public class TrendKeywordProducer {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void send(String key, TrendKeywordItem value) {
+    public void sendKeyword(String key, TrendKeywordItem value) {
         kafkaTemplate.send("trend-keywords", key, value);
     }
 }
