@@ -13,4 +13,12 @@ public interface TrendQueryRepository {
             String sort,
             Pageable pageable
     );
+
+    Page<Trend> searchNews(
+            String major,
+            String sub,
+            String search,
+            String sort,
+            Pageable pageable
+    );
 }
