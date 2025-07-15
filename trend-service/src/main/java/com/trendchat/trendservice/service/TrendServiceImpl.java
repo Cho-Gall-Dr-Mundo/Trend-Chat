@@ -7,6 +7,7 @@ import com.trendchat.trendservice.entity.SubCategory;
 import com.trendchat.trendservice.entity.Trend;
 import com.trendchat.trendservice.repository.SubCategoryRepository;
 import com.trendchat.trendservice.repository.TrendRepository;
+import com.trendchat.trendservice.util.TrendKeywordProducer;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -36,10 +37,17 @@ public class TrendServiceImpl implements TrendService {
     private final TrendKeywordProducer trendKeywordProducer;
 
     /**
-     * Kafka를 통해 수신한 트렌드 분석 결과를 처리하고, 서브카테고리와 요약/블로그 정보를 트렌드 엔티티에 반영합니다.
+     * Kafka를 통해 수신한 트렌드 분석 결과를 처리하고, 트렌드 엔티티에 서브카테고리 및 요약/블로그 정보를 반영한 뒤, 해당 결과를 다시 Kafka에 발행합니다.
+     *
+     * <p>카테고리가 존재하지 않으면 기본값인 "특집기획" 서브카테고리를 지정합니다
+     * (보상 분류 처리).</p>
+     *
+     * <p>최종적으로 {@code trend-created} 토픽으로 트렌드 전체 정보를 발행하여,
+     * 다른 마이크로서비스에 전달합니다.</p>
      *
      * @param item 분석된 트렌드 항목 정보
-     * @throws IllegalStateException 키워드에 해당하는 트렌드가 DB에 없을 경우
+     * @throws IllegalStateException    키워드에 해당하는 트렌드가 DB에 존재하지 않을 경우
+     * @throws IllegalArgumentException 기본 서브카테고리("특집기획")가 존재하지 않을 경우
      */
     @Override
     @Transactional
@@ -56,7 +64,11 @@ public class TrendServiceImpl implements TrendService {
                     () -> new IllegalArgumentException("Not found subCategory"));
             trend.updateSubCategories(List.of(subCategory));
         }
+
         trend.updateSummaryAndBlogPost(item.summary(), item.blog_post());
+
+        // Kafka로 트렌드 분석 결과 발행
+        trendKeywordProducer.sendTrend(item.keyword(), item);
     }
 
     /**

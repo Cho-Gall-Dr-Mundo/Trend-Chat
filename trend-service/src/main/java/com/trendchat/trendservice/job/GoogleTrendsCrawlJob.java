@@ -1,10 +1,10 @@
 package com.trendchat.trendservice.job;
 
 import com.trendchat.trendservice.dto.TrendKeywordItem;
-import com.trendchat.trendservice.service.TrendKeywordProducer;
 import com.trendchat.trendservice.service.TrendKeywordServiceImpl;
 import com.trendchat.trendservice.service.TrendServiceImpl;
 import com.trendchat.trendservice.util.GoogleTrendsCrawler;
+import com.trendchat.trendservice.util.TrendKeywordProducer;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.quartz.Job;
