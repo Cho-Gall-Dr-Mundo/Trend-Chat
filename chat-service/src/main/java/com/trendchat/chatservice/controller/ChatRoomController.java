@@ -1,16 +1,17 @@
 package com.trendchat.chatservice.controller;
 
-import com.trendchat.chatservice.dto.ChatRoomListResponse;
-import com.trendchat.chatservice.dto.ChatRoomResponse;
-import com.trendchat.chatservice.dto.ChatRoomStatsResponse;
-import com.trendchat.chatservice.dto.MyRoomResponse;
+import com.trendchat.chatservice.dto.*;
 import com.trendchat.chatservice.service.ChatRoomService;
+import com.trendchat.chatservice.service.SummarySseService;
 import com.trendchat.trendchatcommon.auth.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,7 @@ import java.util.Optional;
 public class ChatRoomController {
 
     private final ChatRoomService chatRoomService;
+    private final SummarySseService summarySseService;
 
     @GetMapping
     public ResponseEntity<List<ChatRoomListResponse>> getAllChatRooms() {
@@ -71,5 +73,11 @@ public class ChatRoomController {
     @GetMapping("/my")
     public ResponseEntity<List<MyRoomResponse>> getMyRooms(@AuthenticationPrincipal AuthUser authUser) {
         return ResponseEntity.ok(chatRoomService.getMyRooms(authUser.getUserId()));
+    }
+
+    //뉴메세지 알림
+    @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<RoomSummaryEvent>> subscribe(@AuthenticationPrincipal AuthUser authUser) {
+        return summarySseService.subscribe(authUser.getUserId());
     }
 }

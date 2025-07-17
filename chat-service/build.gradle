@@ -64,6 +64,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-amqp' // RabbitMQ 사용
     implementation 'org.springframework.boot:spring-boot-starter-webflux' // WebFlux 사용
     implementation 'com.fasterxml.jackson.core:jackson-databind' // 메시지 직렬화
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'//Redis사용
     implementation 'org.springframework.kafka:spring-kafka'
     implementation("jakarta.servlet:jakarta.servlet-api:6.0.0")
 }
