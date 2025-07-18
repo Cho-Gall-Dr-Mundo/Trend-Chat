@@ -2,7 +2,8 @@ package com.trendchat.trendservice.util;
 
 import com.trendchat.trendservice.dto.NewsItem;
 import com.trendchat.trendservice.dto.TrendKeywordItem;
-import io.github.bonigarcia.wdm.WebDriverManager;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,8 +16,8 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.stereotype.Component;
@@ -50,8 +51,6 @@ public class GoogleTrendsCrawler {
      * @return 키워드를 key로 하고, 해당 키워드의 검색량, 상태, 시간, 뉴스 기사 목록을 value로 갖는 Map 객체
      */
     public Map<String, TrendKeywordItem> crawl() {
-        WebDriverManager.chromedriver().setup();
-
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless=new");
         options.addArguments("--disable-gpu");
@@ -59,13 +58,20 @@ public class GoogleTrendsCrawler {
         options.addArguments("--start-maximized");
         options.addArguments("user-agent=Mozilla/5.0");
 
-        WebDriver driver = new ChromeDriver(options);
+        WebDriver driver = null;
         Map<String, TrendKeywordItem> resultMap = new HashMap<>();
-
-        long started = System.currentTimeMillis();
+        
         try {
+            try {
+                driver = new RemoteWebDriver(new URL("http://localhost:4444/wd/hub"), options);
+            } catch (MalformedURLException e) {
+                log.error("Invalid Selenium URL", e);
+                // RemoteWebDriver 생성에 실패하면 크롤링을 중단해야 하므로 예외를 던지거나 즉시 반환
+                throw new RuntimeException("Could not create RemoteWebDriver session.", e);
+            }
+
             driver.get("https://trends.google.co.kr/trending?geo=KR&hours=4");
-            Thread.sleep(4000); // 최초 렌더링 대기
+            Thread.sleep(4000);
 
             JavascriptExecutor js = (JavascriptExecutor) driver;
             List<WebElement> allCards = driver.findElements(
@@ -164,11 +170,10 @@ public class GoogleTrendsCrawler {
         } catch (Exception e) {
             log.error("Exception occurred while crawling trends", e);
         } finally {
-            driver.quit();
+            if (driver != null) {
+                driver.quit();
+            }
         }
-
-        long elapsed = System.currentTimeMillis() - started;
-        log.info("크롤링 전체 소요 시간(ms): {}", elapsed);
 
         return resultMap;
     }
