@@ -8,7 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  # Job 1: 변경된 모듈 감지
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
@@ -41,7 +40,6 @@ jobs:
               - 'payment-service/**'
               - 'build.gradle'
 
-  # Job 2, 3, 4...: 각 마이크로서비스 배포
   deploy-user-service:
     needs: detect-changes
     if: needs.detect-changes.outputs.user-service == 'true'
