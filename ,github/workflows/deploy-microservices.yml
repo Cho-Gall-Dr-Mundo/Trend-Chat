@@ -1,0 +1,87 @@
+name: Deploy Microservices CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  # Job 1: 변경된 모듈 감지
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      user-service: ${{ steps.filter.outputs.user-service }}
+      trend-service: ${{ steps.filter.outputs.trend-service }}
+      chat-service: ${{ steps.filter.outputs.chat-service }}
+      payment-service: ${{ steps.filter.outputs.payment-service }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed files
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            user-service:
+              - 'user-service/**'
+              - 'build.gradle'
+            trend-service:
+              - 'trend-service/**'
+              - 'build.gradle'
+            chat-service:
+              - 'chat-service/**'
+              - 'build.gradle'
+            payment-service:
+              - 'payment-service/**'
+              - 'build.gradle'
+
+  # Job 2, 3, 4...: 각 마이크로서비스 배포
+  deploy-user-service:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.user-service == 'true'
+    uses: ./.github/workflows/reusable-deploy-spring.yml
+    with:
+      service-name: user-service
+      image-name: trend-chat-user-service
+      deployment-name: user-service-deployment
+      container-name: user-service
+    secrets: inherit
+
+  deploy-trend-service:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.trend-service == 'true'
+    uses: ./.github/workflows/reusable-deploy-spring.yml
+    with:
+      service-name: trend-service
+      image-name: trend-chat-trend-service
+      deployment-name: trend-service-deployment
+      container-name: trend-service
+    secrets: inherit
+
+  deploy-chat-service:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.chat-service == 'true'
+    uses: ./.github/workflows/reusable-deploy-spring.yml
+    with:
+      service-name: chat-service
+      image-name: trend-chat-chat-service
+      deployment-name: chat-service-deployment
+      container-name: chat-service
+    secrets: inherit
+
+  deploy-payment-service:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.payment-service == 'true'
+    uses: ./.github/workflows/reusable-deploy-spring.yml
+    with:
+      service-name: payment-service
+      image-name: trend-chat-payment-service
+      deployment-name: payment-service-deployment
+      container-name: payment-service
+    secrets: inherit

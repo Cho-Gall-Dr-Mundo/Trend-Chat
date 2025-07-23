@@ -1,0 +1,8 @@
+rootProject.name = 'trend-chat'
+include 'config-service'
+include 'discovery-service'
+include 'api-gateway-service'
+include 'user-service'
+include 'trend-service'
+include 'chat-service'
+include 'payment-service'
