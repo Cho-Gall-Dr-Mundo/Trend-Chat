@@ -47,7 +47,7 @@ jobs:
       - name: Build and Push Docker Image
         run: |
           ./gradlew :${{ inputs.service-name }}:bootBuildImage \
-          --imageName="${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image-name }}:latest
+          --imageName="${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image-name }}:latest"
 
       - name: Deploy to Kubernetes
         run: |
