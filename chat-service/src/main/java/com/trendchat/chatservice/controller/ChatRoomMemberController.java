@@ -23,6 +23,6 @@ public class ChatRoomMemberController {
 
     @PostMapping("/{roomId}/members")
     public void joinRoom(@PathVariable Long roomId, @AuthenticationPrincipal AuthUser user) {
-        chatRoomMemberService.joinRoom(roomId, user.getUserId(), user.getNickname());
+        chatRoomMemberService.joinRoom(roomId, user.getUserId(), user.getNickname(), user.getUserRole());
     }
 }
