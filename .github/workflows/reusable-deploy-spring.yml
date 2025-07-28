@@ -49,7 +49,7 @@ jobs:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./gradlew :${{ inputs.service-name }}:bootBuildImage \
+          ./gradlew clean :${{ inputs.service-name }}:bootBuildImage \
           --imageName="${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image-name }}:latest"
 
       - name: Deploy to Kubernetes
