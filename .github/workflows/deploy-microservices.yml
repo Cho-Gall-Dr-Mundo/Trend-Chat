@@ -48,12 +48,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { java-version: '17', distribution: 'temurin' }
+        with:
+          java-version: '17'
+          distribution: 'temurin'
       - run: chmod +x ./gradlew
-      - uses: docker/login-action@v3
-        with: { username: ${ { secrets.DOCKERHUB_USERNAME } }, password: ${ { secrets.DOCKERHUB_TOKEN } } }
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build Docker Image
         run: ./gradlew clean :user-service:bootBuildImage --imageName="${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-user-service:latest"
+
       - name: Push Docker Image
         run: docker push "${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-user-service:latest"
 
@@ -66,6 +74,7 @@ jobs:
           run: |
             kubectl set image deployment/user-service-deployment user-service=${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-user-service:latest
             kubectl rollout restart deployment/user-service-deployment
+
         - name: Verify deployment
           run: kubectl rollout status deployment/user-service-deployment
 
@@ -77,12 +86,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { java-version: '17', distribution: 'temurin' }
+        with:
+          java-version: '17'
+          distribution: 'temurin'
       - run: chmod +x ./gradlew
-      - uses: docker/login-action@v3
-        with: { username: ${ { secrets.DOCKERHUB_USERNAME } }, password: ${ { secrets.DOCKERHUB_TOKEN } } }
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build Docker Image
         run: ./gradlew clean :trend-service:bootBuildImage --imageName="${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-trend-service:latest"
+
       - name: Push Docker Image
         run: docker push "${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-trend-service:latest"
 
@@ -95,6 +112,7 @@ jobs:
           run: |
             kubectl set image deployment/trend-service-deployment trend-service=${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-trend-service:latest
             kubectl rollout restart deployment/trend-service-deployment
+
         - name: Verify deployment
           run: kubectl rollout status deployment/trend-service-deployment
 
@@ -107,12 +125,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { java-version: '17', distribution: 'temurin' }
+        with:
+          java-version: '17'
+          distribution: 'temurin'
       - run: chmod +x ./gradlew
-      - uses: docker/login-action@v3
-        with: { username: ${ { secrets.DOCKERHUB_USERNAME } }, password: ${ { secrets.DOCKERHUB_TOKEN } } }
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build Docker Image
         run: ./gradlew clean :chat-service:bootBuildImage --imageName="${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-chat-service:latest"
+
       - name: Push Docker Image
         run: docker push "${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-chat-service:latest"
 
@@ -125,6 +151,7 @@ jobs:
           run: |
             kubectl set image deployment/chat-service-deployment chat-service=${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-chat-service:latest
             kubectl rollout restart deployment/chat-service-deployment
+
         - name: Verify deployment
           run: kubectl rollout status deployment/chat-service-deployment
 
@@ -136,12 +163,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { java-version: '17', distribution: 'temurin' }
+        with:
+          java-version: '17'
+          distribution: 'temurin'
       - run: chmod +x ./gradlew
-      - uses: docker/login-action@v3
-        with: { username: ${ { secrets.DOCKERHUB_USERNAME } }, password: ${ { secrets.DOCKERHUB_TOKEN } } }
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build Docker Image
         run: ./gradlew clean :payment-service:bootBuildImage --imageName="${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-payment-service:latest"
+
       - name: Push Docker Image
         run: docker push "${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-payment-service:latest"
 
@@ -154,5 +189,6 @@ jobs:
           run: |
             kubectl set image deployment/payment-service-deployment payment-service=${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-payment-service:latest
             kubectl rollout restart deployment/payment-service-deployment
+
         - name: Verify deployment
           run: kubectl rollout status deployment/payment-service-deployment
