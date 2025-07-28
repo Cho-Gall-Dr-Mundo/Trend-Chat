@@ -50,7 +50,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew clean :${{ inputs.service-name }}:bootBuildImage \
-          --imageName="${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image-name }}:latest"
+          --imageName="${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image-name }}:latest" \
+          -Dspring.boot.build-image.publish=true
 
       - name: Deploy to Kubernetes
         run: |
