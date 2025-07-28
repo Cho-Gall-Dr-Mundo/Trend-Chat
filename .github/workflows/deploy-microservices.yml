@@ -40,47 +40,119 @@ jobs:
               - 'payment-service/**'
               - 'build.gradle'
 
-  deploy-user-service:
+  build-user-service:
+    name: Build User Service
+    runs-on: ubuntu-latest
     needs: detect-changes
     if: needs.detect-changes.outputs.user-service == 'true'
-    uses: ./.github/workflows/reusable-deploy-spring.yml
-    with:
-      service-name: user-service
-      image-name: trend-chat-user-service
-      deployment-name: user-service-deployment
-      container-name: user-service
-    secrets: inherit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { java-version: '17', distribution: 'temurin' }
+      - run: chmod +x ./gradlew
+      - uses: docker/login-action@v3
+        with: { username: ${ { secrets.DOCKERHUB_USERNAME } }, password: ${ { secrets.DOCKERHUB_TOKEN } } }
+      - name: Build Docker Image
+        run: ./gradlew clean :user-service:bootBuildImage --imageName="${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-user-service:latest"
+      - name: Push Docker Image
+        run: docker push "${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-user-service:latest"
 
-  deploy-trend-service:
+    deploy-user-service:
+      name: Deploy User Service
+      runs-on: self-hosted
+      needs: build-user-service
+      steps:
+        - name: Deploy to Kubernetes
+          run: |
+            kubectl set image deployment/user-service-deployment user-service=${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-user-service:latest
+            kubectl rollout restart deployment/user-service-deployment
+        - name: Verify deployment
+          run: kubectl rollout status deployment/user-service-deployment
+
+  build-trend-service:
+    name: Build Trend Service
+    runs-on: ubuntu-latest
     needs: detect-changes
     if: needs.detect-changes.outputs.trend-service == 'true'
-    uses: ./.github/workflows/reusable-deploy-spring.yml
-    with:
-      service-name: trend-service
-      image-name: trend-chat-trend-service
-      deployment-name: trend-service-deployment
-      container-name: trend-service
-    secrets: inherit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { java-version: '17', distribution: 'temurin' }
+      - run: chmod +x ./gradlew
+      - uses: docker/login-action@v3
+        with: { username: ${ { secrets.DOCKERHUB_USERNAME } }, password: ${ { secrets.DOCKERHUB_TOKEN } } }
+      - name: Build Docker Image
+        run: ./gradlew clean :trend-service:bootBuildImage --imageName="${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-trend-service:latest"
+      - name: Push Docker Image
+        run: docker push "${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-trend-service:latest"
 
-  deploy-chat-service:
+    deploy-trend-service:
+      name: Deploy Trend Service
+      runs-on: self-hosted
+      needs: build-trend-service
+      steps:
+        - name: Deploy to Kubernetes
+          run: |
+            kubectl set image deployment/trend-service-deployment trend-service=${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-trend-service:latest
+            kubectl rollout restart deployment/trend-service-deployment
+        - name: Verify deployment
+          run: kubectl rollout status deployment/trend-service-deployment
+
+  build-chat-service:
+    name: Build Chat Service
+    runs-on: ubuntu-latest
     needs: detect-changes
-    # if: needs.detect-changes.outputs.chat-service == 'true'
+    #if: needs.detect-changes.outputs.chat-service == 'true'
     if: github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.chat-service == 'true' # 임시 수정
-    uses: ./.github/workflows/reusable-deploy-spring.yml
-    with:
-      service-name: chat-service
-      image-name: trend-chat-chat-service
-      deployment-name: chat-service-deployment
-      container-name: chat-service
-    secrets: inherit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { java-version: '17', distribution: 'temurin' }
+      - run: chmod +x ./gradlew
+      - uses: docker/login-action@v3
+        with: { username: ${ { secrets.DOCKERHUB_USERNAME } }, password: ${ { secrets.DOCKERHUB_TOKEN } } }
+      - name: Build Docker Image
+        run: ./gradlew clean :chat-service:bootBuildImage --imageName="${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-chat-service:latest"
+      - name: Push Docker Image
+        run: docker push "${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-chat-service:latest"
 
-  deploy-payment-service:
+    deploy-chat-service:
+      name: Deploy Chat Service
+      runs-on: self-hosted
+      needs: build-chat-service
+      steps:
+        - name: Deploy to Kubernetes
+          run: |
+            kubectl set image deployment/chat-service-deployment chat-service=${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-chat-service:latest
+            kubectl rollout restart deployment/chat-service-deployment
+        - name: Verify deployment
+          run: kubectl rollout status deployment/chat-service-deployment
+
+  build-payment-service:
+    name: Build Payment Service
+    runs-on: ubuntu-latest
     needs: detect-changes
     if: needs.detect-changes.outputs.payment-service == 'true'
-    uses: ./.github/workflows/reusable-deploy-spring.yml
-    with:
-      service-name: payment-service
-      image-name: trend-chat-payment-service
-      deployment-name: payment-service-deployment
-      container-name: payment-service
-    secrets: inherit
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { java-version: '17', distribution: 'temurin' }
+      - run: chmod +x ./gradlew
+      - uses: docker/login-action@v3
+        with: { username: ${ { secrets.DOCKERHUB_USERNAME } }, password: ${ { secrets.DOCKERHUB_TOKEN } } }
+      - name: Build Docker Image
+        run: ./gradlew clean :payment-service:bootBuildImage --imageName="${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-payment-service:latest"
+      - name: Push Docker Image
+        run: docker push "${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-payment-service:latest"
+
+    deploy-payment-service:
+      name: Deploy Payment Service
+      runs-on: self-hosted
+      needs: build-payment-service
+      steps:
+        - name: Deploy to Kubernetes
+          run: |
+            kubectl set image deployment/payment-service-deployment payment-service=${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-payment-service:latest
+            kubectl rollout restart deployment/payment-service-deployment
+        - name: Verify deployment
+          run: kubectl rollout status deployment/payment-service-deployment
