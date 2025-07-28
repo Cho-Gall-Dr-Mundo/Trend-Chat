@@ -45,6 +45,9 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and Push Docker Image
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew :${{ inputs.service-name }}:bootBuildImage \
           --imageName="${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image-name }}:latest"
