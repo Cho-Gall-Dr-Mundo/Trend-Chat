@@ -7,35 +7,36 @@ import lombok.Getter;
 @Getter
 @Builder
 public class KakaoPayReadyRequest {
-
+    @JsonProperty("cid")
     private String cid;
 
     @JsonProperty("partner_order_id")
-    private String partnerOrderId;
+    private String partner_order_id;
 
     @JsonProperty("partner_user_id")
-    private String partnerUserId;
+    private String partner_user_id;
 
     @JsonProperty("item_name")
-    private String itemName;
+    private String item_name;
 
-    private int quantity;
+    @JsonProperty("quantity")
+    private Integer quantity;
 
     @JsonProperty("total_amount")
-    private int totalAmount;
+    private Integer total_amount;
 
     @JsonProperty("tax_free_amount")
-    private int taxFreeAmount;
+    private Integer tax_free_amount;
 
     @JsonProperty("vat_amount")
-    private int vatAmount;
+    private Integer vat_amount;
 
     @JsonProperty("approval_url")
-    private String approvalUrl;
+    private String approval_url;
 
     @JsonProperty("cancel_url")
-    private String cancelUrl;
+    private String cancel_url;
 
     @JsonProperty("fail_url")
-    private String failUrl;
+    private String fail_url;
 }

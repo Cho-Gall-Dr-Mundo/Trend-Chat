@@ -1,6 +1,8 @@
 package com.trendchat.paymentservice.service;
 
-import com.trendchat.paymentservice.client.kakaoPayClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.trendchat.paymentservice.client.KakaoPayClient;
+import com.trendchat.paymentservice.config.KakaoPayProperties;
 import com.trendchat.paymentservice.dto.KakaoPayApproveRequest;
 import com.trendchat.paymentservice.dto.KakaoPayApproveResponse;
 import com.trendchat.paymentservice.dto.KakaoPayInactiveRequest;
@@ -15,39 +17,18 @@ import com.trendchat.paymentservice.repository.SubscriptionRepository;
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class KakaoPayServiceImpl implements KakaoPayService {
 
-    private final kakaoPayClient kakaoPayClient;
+    private final KakaoPayClient kakaoPayClient;
+    private final KakaoPayProperties kakaoPayProperties;
     private final SubscriptionRepository subscriptionRepository;
-//    private final UserRoleUpdateService userRoleUpdateService;
-
-    @Value("${kakaopay.cid}")
-    private String cid;
-
-    @Value("${kakaopay.client-id}")
-    private String clientId;
-
-    @Value("${kakaopay.client-secret}")
-    private String clientSecret;
-
-    @Value("${kakaopay.secret-key}")
-    private String secretKey;
-
-    @Value("${kakaopay.admin-key}")
-    private String adminKey;
-
-    private static final String APPROVAL_URL = "http://localhost:3000/subscribe/success";
-    private static final String CANCEL_URL = "http://localhost:3000/subscribe/cancel";
-    private static final String FAIL_URL = "http://localhost:3000/subscribe/fail";
-
-    private String authHeader() {
-        return "KakaoAK" + adminKey;
-    }
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional
@@ -57,24 +38,34 @@ public class KakaoPayServiceImpl implements KakaoPayService {
         }
 
         KakaoPayReadyRequest request = KakaoPayReadyRequest.builder()
-                .cid(cid)
-                .partnerOrderId("trendchat-subscription-" + userId)
-                .partnerUserId(String.valueOf(userId))
-                .itemName("TrendChat 프리미엄 구독")
+                .cid(kakaoPayProperties.getCid())
+                .partner_order_id("trendchat-subscription-" + userId)
+                .partner_user_id(userId)
+                .item_name("TrendChat 프리미엄 구독")
                 .quantity(1)
-                .totalAmount(1000)
-                .taxFreeAmount(0)
-                .vatAmount(0)
-                .approvalUrl(APPROVAL_URL + "?userId=" + userId)
-                .cancelUrl(CANCEL_URL)
-                .failUrl(FAIL_URL)
+                .total_amount(3900)
+                .tax_free_amount(0)
+                .vat_amount(354)
+                .approval_url(kakaoPayProperties.getRedirect().getApproveUrl() + "?userId=" + userId)
+                .cancel_url(kakaoPayProperties.getRedirect().getCancelUrl())
+                .fail_url(kakaoPayProperties.getRedirect().getFailUrl())
                 .build();
 
-        KakaoPayReadyResponse response = kakaoPayClient.ready(authHeader(), request);
+        log.info("카카오페이 요청: CID = {}", request.getCid());
+        log.info("카카오페이 승인 URL = {}", request.getApproval_url());
+        try {
+            log.info("카카오페이 전체 요청 바디 = {}", objectMapper.writeValueAsString(request));
+        } catch (Exception e) {
+            log.error("요청 바디 직렬화 실패", e);
+        }
+
+        KakaoPayReadyResponse response = kakaoPayClient.ready(request);
+
+        log.info("카카오페이 응답 수신: {}", response);
 
         Subscription subscription = Subscription.builder()
                 .userId(userId)
-                .sid(response.getTid()) // 임시 저장
+                .sid(response.getTid()) // TID 임시 저장, 실제 SID는 승인 시 할당됨
                 .status(SubscriptionStatus.READY)
                 .build();
 
@@ -89,14 +80,14 @@ public class KakaoPayServiceImpl implements KakaoPayService {
                 .orElseThrow(() -> new IllegalStateException("구독 정보가 없습니다."));
 
         KakaoPayApproveRequest request = KakaoPayApproveRequest.builder()
-                .cid(cid)
+                .cid(kakaoPayProperties.getCid())
                 .tid(tid)
                 .partnerOrderId("trendchat-subscription-" + userId)
                 .partnerUserId(userId)
                 .pgToken(pgToken)
                 .build();
 
-        KakaoPayApproveResponse response = kakaoPayClient.approve(authHeader(), request);
+        KakaoPayApproveResponse response = kakaoPayClient.approve(request);
 
         if (response.getSid() != null ) {
             subscription.updateSid(response.getSid());
@@ -104,8 +95,6 @@ public class KakaoPayServiceImpl implements KakaoPayService {
 
         subscription.activate(LocalDateTime.now());
         subscriptionRepository.save(subscription);
-
-//        userRoleUpdateService.upgradeToPremium(userId);
 
         return response;
     }
@@ -121,16 +110,14 @@ public class KakaoPayServiceImpl implements KakaoPayService {
         }
 
         KakaoPayInactiveRequest request = KakaoPayInactiveRequest.builder()
-                .cid(cid)
+                .cid(kakaoPayProperties.getCid())
                 .sid(subscription.getSid())
                 .build();
 
-        KakaoPayInactiveResponse response = kakaoPayClient.deactivate(authHeader(), request);
+        KakaoPayInactiveResponse response = kakaoPayClient.deactivate(request);
 
         subscription.deactivate(LocalDateTime.now());
         subscriptionRepository.save(subscription);
-
-//        userRoleUpdateService.downgradeToFree(userId);
 
         return response;
     }
@@ -141,10 +128,10 @@ public class KakaoPayServiceImpl implements KakaoPayService {
                 .orElseThrow(() -> new IllegalStateException("구독 정보가 없습니다."));
 
         KakaoPaySubscriptionStatusRequest request = KakaoPaySubscriptionStatusRequest.builder()
-                .cid(cid)
+                .cid(kakaoPayProperties.getCid())
                 .sid(subscription.getSid())
                 .build();
 
-        return kakaoPayClient.getStatus(authHeader(), request);
+        return kakaoPayClient.getStatus(request);
     }
 }
