@@ -60,6 +60,9 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker Image
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew clean :user-service:bootBuildImage --imageName="${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-user-service:latest"
 
       - name: Push Docker Image
@@ -98,6 +101,9 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker Image
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew clean :trend-service:bootBuildImage --imageName="${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-trend-service:latest"
 
       - name: Push Docker Image
@@ -137,6 +143,9 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker Image
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew clean :chat-service:bootBuildImage --imageName="${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-chat-service:latest"
 
       - name: Push Docker Image
@@ -175,6 +184,9 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build Docker Image
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew clean :payment-service:bootBuildImage --imageName="${{ secrets.DOCKERHUB_USERNAME }}/trend-chat-payment-service:latest"
 
       - name: Push Docker Image
