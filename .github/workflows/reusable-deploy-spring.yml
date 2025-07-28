@@ -44,14 +44,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Docker Image
+      - name: Build Docker Image with Gradle
         env:
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ./gradlew clean :${{ inputs.service-name }}:bootBuildImage \
-          --imageName="${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image-name }}:latest" \
-          -Dspring.boot.build-image.publish=true
+          --imageName="${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image-name }}:latest"
+
+      - name: Push Docker Image to Docker Hub
+        run: |
+          docker push "${{ secrets.DOCKERHUB_USERNAME }}/${{ inputs.image-name }}:latest"
 
       - name: Deploy to Kubernetes
         run: |
