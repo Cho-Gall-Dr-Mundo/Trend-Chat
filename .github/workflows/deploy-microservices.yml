@@ -64,7 +64,8 @@ jobs:
 
   deploy-chat-service:
     needs: detect-changes
-    if: needs.detect-changes.outputs.chat-service == 'true'
+    # if: needs.detect-changes.outputs.chat-service == 'true'
+    if: github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.chat-service == 'true' # 임시 수정
     uses: ./.github/workflows/reusable-deploy-spring.yml
     with:
       service-name: chat-service
