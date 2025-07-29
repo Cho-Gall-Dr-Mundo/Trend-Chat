@@ -1,14 +1,22 @@
 package com.trendchat.paymentservice.dto;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
 public class KakaoPayApproveRequest {
-    private String pgToken;
+
+    private String cid;
     private String tid;
-    private String userId;
+
+    @JsonProperty("partner_order_id")
+    private String partnerOrderId;
+
+    @JsonProperty("partner_user_id")
+    private String partnerUserId;
+
+    @JsonProperty("pg_token")
+    private String pgToken;
 }
