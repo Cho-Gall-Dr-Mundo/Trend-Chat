@@ -6,7 +6,9 @@ import com.trendchat.chatservice.entity.ChatRoomMember;
 import com.trendchat.chatservice.repository.ChatRoomMemberRepository;
 import com.trendchat.trendchatcommon.enums.UserRole;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -44,6 +46,6 @@ public class ChatRoomMemberServiceImpl implements ChatRoomMemberService{
         if(role == UserRole.ROLE_PREMIUM) return;
 
         long count = chatRoomMemberRepository.countUserSubscriptions(userId);
-        if(count >= 5) throw new IllegalStateException("최대 5개의 채팅방에 가입할 수 있습니다.");
+        if(count >= 5) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "무료 유저는 최대 5개의 채팅방만 구독할 수 있습니다.");;
     }
 }
