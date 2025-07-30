@@ -42,7 +42,7 @@ ext {
 }
 
 dependencies {
-    implementation 'io.github.Cho-Gall-Dr-Mundo:trend-chat-common:1.1.1'
+    implementation 'io.github.Cho-Gall-Dr-Mundo:trend-chat-common:1.1.3'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -64,6 +64,7 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'com.auth0:java-jwt:4.4.0'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 }
 
 dependencyManagement {
