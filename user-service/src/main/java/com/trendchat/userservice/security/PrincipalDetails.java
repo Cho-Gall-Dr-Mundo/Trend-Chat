@@ -1,8 +1,6 @@
 package com.trendchat.userservice.security;
 
-import com.trendchat.trendchatcommon.enums.UserRole;
 import com.trendchat.userservice.entity.User;
-import java.util.ArrayList;
 import java.util.Collection;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -36,14 +34,7 @@ public class PrincipalDetails implements UserDetails {
      */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        UserRole role = user.getUserRole();
-        String authority = role.getAuthority();
-
-        SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority(authority);
-        Collection<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(simpleGrantedAuthority);
-
-        return authorities;
+        return user.getAuthorities();
     }
 
     /**
