@@ -50,7 +50,6 @@ public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final ClientRegistrationRepository clientRegistrationRepository;
 
     /**
@@ -119,6 +118,14 @@ public class SecurityConfig {
     @Bean
     public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
         return new HttpCookieOAuth2AuthorizationRequestRepository();
+    }
+
+    @Bean
+    public OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler(
+            JwtUtil jwtUtil,
+            TokenService tokenService
+    ) {
+        return new OAuth2LoginSuccessHandler(jwtUtil, tokenService);
     }
 
     /**
@@ -200,7 +207,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             AuthenticationFilter authenticationFilter,
-            AuthorizationFilterMvc authorizationFilter
+            AuthorizationFilterMvc authorizationFilter,
+            OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler
     ) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -209,7 +217,6 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/",
-                                "/debug",
                                 "/api/v1/auth/**",
                                 "/actuator/**",
                                 "/oauth2/authorization/**",

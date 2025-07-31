@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,9 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     private final JwtUtil jwtUtil;
     private final TokenService tokenService;
@@ -66,6 +70,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         jwtUtil.addRefreshTokenToCookie(response, refreshToken);
 
         log.info("OAuth2 login success, User: {}", userId);
-        response.sendRedirect("/");
+        response.sendRedirect(frontendUrl + "/oauth2/callback?token=" + accessToken);
     }
 }

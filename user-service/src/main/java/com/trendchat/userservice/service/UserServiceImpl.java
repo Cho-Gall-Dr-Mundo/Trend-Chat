@@ -1,5 +1,6 @@
 package com.trendchat.userservice.service;
 
+import com.trendchat.userservice.dto.UserRequest;
 import com.trendchat.userservice.dto.UserResponse;
 import com.trendchat.userservice.entity.BlacklistedUser;
 import com.trendchat.userservice.entity.User;
@@ -10,6 +11,7 @@ import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserBlacklistRepository userBlacklistRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * 특정 이메일 주소가 이미 존재하는지 확인합니다. 이메일이 이미 존재할 경우, {@link IllegalStateException}을 발생시킵니다.
@@ -88,7 +91,47 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public UserResponse.Get getUser(String userId) {
-        return new UserResponse.Get(isValidUser(userId));
+        User user = isValidUser(userId);
+        boolean isSocial = false;
+        if (user.getPassword().equals("{noop}")) {
+            isSocial = true;
+        }
+        return new UserResponse.Get(user, isSocial);
+    }
+
+    @Override
+    @Transactional
+    public void updateNickname(String userId, String newNickname) {
+        if (newNickname == null || newNickname.trim().isEmpty()) {
+            throw new IllegalArgumentException("Please enter a nickname.");
+        }
+        User user = isValidUser(userId);
+
+        if (user.getNickname().equals(newNickname)) {
+            throw new IllegalStateException("This nickname is already in use.");
+        }
+
+        user.updateNickname(newNickname);
+    }
+
+    @Override
+    @Transactional
+    public void updatePassword(String userId, UserRequest.UpdatePassword request) {
+        User user = isValidUser(userId);
+
+        if (user.getPassword().equals("{noop}")) {
+            throw new IllegalStateException("Social login users cannot change password.");
+        }
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect.");
+        }
+
+        if (request.newPassword() == null || request.newPassword().length() < 8) {
+            throw new IllegalArgumentException("New password must be at least 8 characters.");
+        }
+
+        user.updatePassword(passwordEncoder.encode(request.newPassword()));
     }
 
     /**

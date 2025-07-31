@@ -1,5 +1,6 @@
 package com.trendchat.userservice.service;
 
+import com.trendchat.userservice.dto.UserRequest;
 import com.trendchat.userservice.dto.UserResponse;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
@@ -37,4 +38,8 @@ public interface UserService extends UserDetailsService {
      * @return 조회된 사용자 정보가 포함된 {@link UserResponse.Get} 객체
      */
     UserResponse.Get getUser(String userId);
+
+    void updateNickname(String userId, String newNickname);
+
+    void updatePassword(String userId, UserRequest.UpdatePassword request);
 }
