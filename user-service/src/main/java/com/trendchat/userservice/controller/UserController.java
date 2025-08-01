@@ -90,7 +90,15 @@ public class UserController {
             @AuthenticationPrincipal AuthUser authUser
     ) {
         userService.updateNickname(authUser.getUserId(), request.nickname());
-        return ResponseEntity.noContent().build();
+        String newAccessToken = jwtUtil.createAccessToken(
+                authUser.getUserId(),
+                request.nickname(),
+                authUser.getUserRole().getAuthority()
+        );
+
+        return ResponseEntity.ok()
+                .header("Authorization", "Bearer " + newAccessToken)
+                .build();
     }
 
     @PatchMapping("/password")
