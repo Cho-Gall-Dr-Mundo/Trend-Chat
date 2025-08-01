@@ -162,4 +162,8 @@ public class User {
     public void updateNickname(String newNickname) {
         nickname = newNickname;
     }
+
+    public void updatePassword(String newPassword) {
+        password = newPassword;
+    }
 }

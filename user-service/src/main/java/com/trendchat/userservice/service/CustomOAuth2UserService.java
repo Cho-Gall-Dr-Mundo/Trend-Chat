@@ -29,15 +29,32 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     /**
      * OAuth2 공급자로부터 사용자 정보를 로드합니다.
      * <p>
-     * 1. {@link DefaultOAuth2UserService}를 통해 기본 사용자 정보를 가져옵니다. 2. 사용자 이메일을 기준으로 우리 서비스에 이미 등록된
-     * 사용자인지 확인합니다. 3. 등록된 사용자라면, 필요한 경우 사용자 정보를 업데이트합니다. 4. 등록되지 않은 새 사용자라면, ROLE_FREE 역할로 신규 사용자를
-     * 생성하고 저장합니다. 5. 최종적으로 {@link PrincipalOAuth2User} 객체를 반환하여 Spring Security에 사용자 정보를 전달합니다.
+     * 1. {@link DefaultOAuth2UserService}를 통해 기본 OAuth2 사용자 정보를 가져옵니다.<br> 2. 소셜에서 받은 email로 이미 가입된
+     * 사용자가 있는지 확인합니다.<br> 3. 등록된 사용자가 있으면, <b>기존 사용자 정보(닉네임 등)를 유지</b>하며 로그인 처리만 진행합니다.<br> 4. 등록된
+     * 사용자가 없으면, 신규 사용자를 생성(닉네임, email 등) 후 저장합니다.<br> 5. 최종적으로 {@link PrincipalOAuth2User} 객체를 반환하여
+     * Spring Security에 사용자 정보를 전달합니다.
+     * </p>
+     *
+     * <p>
+     * <b>NOTE:</b> 기존 사용자가 소셜로 로그인할 경우, 소셜 프로필 닉네임 등은 <b>덮어쓰지 않고</b> 기존 DB의 정보가 유지됩니다.
      * </p>
      *
      * @param userRequest OAuth2 사용자 정보를 요청하기 위한 정보
      * @return 로드된 OAuth2 사용자 정보와 우리 서비스의 User 엔티티가 포함된 {@link PrincipalOAuth2User}
      * @throws OAuth2AuthenticationException OAuth2 인증 실패 시 발생하는 예외
+     *
+     *                                       <p>
+     *                                       <b>TODO (권장 표준 방식):</b>
+     *                                       <ul>
+     *                                         <li>1. 최초 로그인 시 소셜 프로바이더의 unique id(sub, id 등)를 별도의 테이블에 저장(소셜 연동 이력 관리).</li>
+     *                                         <li>2. 이미 가입된 이메일과 소셜 로그인이 충돌할 경우, 추가 인증/병합 절차(예: 이메일 인증, 사용자 선택 병합 등) 구현.</li>
+     *                                         <li>3. 소셜에서 받은 닉네임, 프로필 이미지 등은 최초 회원가입시만 반영. 이후에는 사용자가 직접 프로필을 변경/관리하도록 안내.</li>
+     *                                         <li>4. "회원탈퇴 → 같은 이메일 소셜 가입" 시 중복 가입 방지, 휴면 처리 등 예외 케이스 핸들링.</li>
+     *                                         <li>5. 유저가 여러 소셜 계정과 연결(연동/연결 해제)할 수 있도록 관리 UI/기능 추가 고려.</li>
+     *                                       </ul>
+     *                                       </p>
      */
+
     @Override
     @Transactional
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -101,7 +118,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         if (optionalUser.isPresent()) {
             user = optionalUser.get();
-            user.updateNickname(nickname);
             log.info("Existing user ({}:{}) logged in via OAuth2.", user.getUserId(), email);
         } else {
             log.info("Registering new OAuth2 user ({}:{}).", email, nickname);

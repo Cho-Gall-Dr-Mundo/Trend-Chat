@@ -3,6 +3,7 @@ package com.trendchat.userservice.controller;
 import com.trendchat.trendchatcommon.auth.AuthUser;
 import com.trendchat.trendchatcommon.util.JwtUtil;
 import com.trendchat.userservice.dto.Token;
+import com.trendchat.userservice.dto.UserRequest;
 import com.trendchat.userservice.dto.UserResponse;
 import com.trendchat.userservice.service.TokenService;
 import com.trendchat.userservice.service.UserService;
@@ -14,7 +15,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -78,6 +81,32 @@ public class UserController {
         tokenService.logout(new Token.Pair(accessToken, refreshToken));
         jwtUtil.clearAllCookies(request, response);
 
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/nickname")
+    public ResponseEntity<Void> updateNickname(
+            @RequestBody UserRequest.UpdateNickname request,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        userService.updateNickname(authUser.getUserId(), request.nickname());
+        String newAccessToken = jwtUtil.createAccessToken(
+                authUser.getUserId(),
+                request.nickname(),
+                authUser.getUserRole().getAuthority()
+        );
+
+        return ResponseEntity.ok()
+                .header("Authorization", "Bearer " + newAccessToken)
+                .build();
+    }
+
+    @PatchMapping("/password")
+    public ResponseEntity<Void> updatePassword(
+            @RequestBody UserRequest.UpdatePassword request,
+            @AuthenticationPrincipal AuthUser authUser
+    ) {
+        userService.updatePassword(authUser.getUserId(), request);
         return ResponseEntity.noContent().build();
     }
 }

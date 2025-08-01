@@ -5,6 +5,7 @@ import com.trendchat.trendchatcommon.exception.InvalidTokenException;
 import com.trendchat.trendchatcommon.util.JwtUtil;
 import com.trendchat.userservice.dto.Token;
 import com.trendchat.userservice.entity.BlacklistedAccessToken;
+import com.trendchat.userservice.entity.BlacklistedUser;
 import com.trendchat.userservice.entity.RefreshToken;
 import com.trendchat.userservice.repository.AccessTokenBlacklistRepository;
 import com.trendchat.userservice.repository.RefreshTokenRepository;
@@ -85,6 +86,7 @@ public class TokenServiceImpl implements TokenService {
 
             userService.lockAccount(info.getSubject());
             refreshTokenRepository.delete(refreshToken);
+            userBlacklistRepository.save(new BlacklistedUser(info.getSubject(), 30 * 60L));
 
             throw new SecurityException("Detected tampered refresh token");
         } else {

@@ -2,6 +2,8 @@ package com.trendchat.userservice.dto;
 
 import com.trendchat.userservice.dto.UserRequest.Login;
 import com.trendchat.userservice.dto.UserRequest.Signup;
+import com.trendchat.userservice.dto.UserRequest.UpdateNickname;
+import com.trendchat.userservice.dto.UserRequest.UpdatePassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,7 +18,7 @@ import jakarta.validation.constraints.Size;
  * @see com.trendchat.userservice.dto.UserRequest.Signup
  * @see com.trendchat.userservice.dto.UserRequest.Login
  */
-public sealed interface UserRequest permits Signup, Login {
+public sealed interface UserRequest permits Signup, Login, UpdateNickname, UpdatePassword {
 
     /**
      * {@code Signup} 레코드는 사용자 회원가입 요청 시 사용되는 DTO입니다.
@@ -65,6 +67,26 @@ public sealed interface UserRequest permits Signup, Login {
             @NotNull(message = "Password cannot be null")
             @Size(min = 8, message = "Password must equal or grater than 8 characters")
             String password
+    ) implements UserRequest {
+
+    }
+
+    record UpdateNickname(
+            @NotNull(message = "Nickname cannot be null")
+            @Size(min = 2, message = "Nickname not be less than two characters")
+            String nickname
+    ) implements UserRequest {
+
+    }
+
+    record UpdatePassword(
+            @NotNull(message = "Password cannot be null")
+            @Size(min = 8, message = "Password must equal or grater than 8 characters")
+            String currentPassword,
+
+            @NotNull(message = "Password cannot be null")
+            @Size(min = 8, message = "Password must equal or grater than 8 characters")
+            String newPassword
     ) implements UserRequest {
 
     }

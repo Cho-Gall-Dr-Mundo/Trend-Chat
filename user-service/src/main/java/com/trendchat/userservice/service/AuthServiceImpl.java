@@ -61,7 +61,7 @@ public class AuthServiceImpl implements AuthService {
 
         User savedUser = userRepository.save(newUser);
 
-        return new UserResponse.Get(savedUser);
+        return new UserResponse.Get(savedUser, false);
     }
 }
 
