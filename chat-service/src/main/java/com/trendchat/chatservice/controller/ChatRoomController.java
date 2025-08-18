@@ -30,6 +30,11 @@ public class ChatRoomController {
         return ResponseEntity.ok(chatRoomService.getAllChatRooms());
     }
 
+    @GetMapping("/total")
+    public ResponseEntity<Long> getTotalChatRooms(@AuthenticationPrincipal AuthUser authUser) {
+        return ResponseEntity.ok(chatRoomService.getTotalChatRooms(authUser.getUserId()));
+    }
+
     @GetMapping("/{roomId}")
     public ResponseEntity<ChatRoomResponse> getChatRoomById(@PathVariable Long roomId, @AuthenticationPrincipal AuthUser authUser) {
         return ResponseEntity.ok(chatRoomService.getChatRoomByIdResponse(roomId, authUser.getUserId()));

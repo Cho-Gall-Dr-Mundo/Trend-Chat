@@ -30,4 +30,6 @@ public interface ChatRoomService {
     List<Long> getTop6ActiveRoomIds();
 
     List<MyRoomResponse> getMyRooms(String userId);
+
+    Long getTotalChatRooms(String userId);
 }

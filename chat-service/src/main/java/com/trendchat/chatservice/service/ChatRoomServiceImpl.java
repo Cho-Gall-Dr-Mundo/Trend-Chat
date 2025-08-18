@@ -153,6 +153,12 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Long getTotalChatRooms(String userId) {
+        List<Long> roomIds = chatRoomRepository.findRoomIdsByUserId(userId);
+        return (long) roomIds.size();
+    }
+
     private ChatRoomResponse toChatRoomResponse(ChatRoom chatRoom, String currentUserId) {
         List<ChatMessageResponse> messages = chatRoom.getMessages().stream()
                 .map(msg -> new ChatMessageResponse(
