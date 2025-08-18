@@ -21,4 +21,6 @@ public interface TrendQueryRepository {
             String sort,
             Pageable pageable
     );
+
+    Page<Trend> findTop6RecentNewsTrends(Pageable pageable);
 }
