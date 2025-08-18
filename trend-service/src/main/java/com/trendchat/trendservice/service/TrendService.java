@@ -73,4 +73,6 @@ public interface TrendService {
      * @return 해당 키워드의 상세 뉴스 응답 DTO
      */
     TrendResponse.Get getNews(String keyword);
+
+    Page<TrendResponse.Get> getTop6News();
 }

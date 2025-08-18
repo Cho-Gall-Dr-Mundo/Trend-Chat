@@ -2,6 +2,7 @@ package com.trendchat.trendservice.repository;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.Wildcard;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.trendchat.trendservice.entity.QMajorCategory;
@@ -180,6 +181,32 @@ public class TrendQueryRepositoryImpl implements TrendQueryRepository {
                 .fetch();
 
         Long total = Optional.ofNullable(countQuery.fetchOne()).orElse(0L);
+
+        return new PageImpl<>(result, pageable, total);
+    }
+
+    @Override
+    public Page<Trend> findTop6RecentNewsTrends(Pageable pageable) {
+        QTrend trend = QTrend.trend;
+
+        BooleanBuilder where = new BooleanBuilder();
+        where.and(trend.blogPost.isNotNull().and(trend.blogPost.length().gt(0)));
+
+        List<Trend> result = queryFactory
+                .selectFrom(trend)
+                .where(where)
+                .orderBy(trend.createdAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        long total = Optional.ofNullable(
+                queryFactory
+                        .select(Wildcard.count)
+                        .from(trend)
+                        .where(where)
+                        .fetchOne()
+        ).orElse(0L);
 
         return new PageImpl<>(result, pageable, total);
     }

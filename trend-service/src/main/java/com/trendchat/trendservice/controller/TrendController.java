@@ -88,4 +88,9 @@ public class TrendController {
     public ResponseEntity<TrendResponse.Get> getSingleNews(@PathVariable String keyword) {
         return ResponseEntity.ok(trendService.getNews(keyword));
     }
+
+    @GetMapping("/news/top6")
+    public ResponseEntity<Page<TrendResponse.Get>> getTop6News() {
+        return ResponseEntity.ok(trendService.getTop6News());
+    }
 }

@@ -13,7 +13,10 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -157,5 +160,17 @@ public class TrendServiceImpl implements TrendService {
         Trend trend = trendRepository.findByKeyword(keyword).orElseThrow(
                 () -> new IllegalArgumentException("Not found keyword"));
         return new TrendResponse.Get(trend);
+    }
+
+    @Override
+    public Page<TrendResponse.Get> getTop6News() {
+        Pageable pageable = PageRequest.of(0, 6, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Trend> page = trendRepository.findTop6RecentNewsTrends(pageable);
+        
+        List<TrendResponse.Get> dtoList = page.getContent().stream()
+                .map(TrendResponse.Get::new)
+                .toList();
+
+        return new PageImpl<>(dtoList, pageable, page.getTotalElements());
     }
 }
