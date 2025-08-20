@@ -34,7 +34,7 @@ public class ChatServiceImpl implements ChatService{
     }
 
     @Override
-    public List<ChatMessageResponse> getMessageHistory(Long roomId, String currentUserEmail) {
+    public List<ChatMessageResponse> getMessageHistory(Long roomId, String userUUID) {
         return repository.findByChatRoomIdOrderByTimestampAsc(roomId).stream()
                 .map(msg -> new ChatMessageResponse(
                         msg.getId(),
@@ -43,7 +43,7 @@ public class ChatServiceImpl implements ChatService{
                         msg.getSenderNickname(),
                         msg.getContent(),
                         msg.getTimestamp(),
-                        msg.getSender().equals(currentUserEmail)
+                        msg.getSender().equals(userUUID)
                 ))
                 .toList();
     }
